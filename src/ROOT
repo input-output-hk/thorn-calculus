@@ -1,0 +1,7 @@
+chapter IOG
+
+session Thorn_Calculus = HOL +
+  description
+    \<open>A general-purpose process calculus with support for arbitrary data.\<close>
+  document_files
+    "root.tex"
