@@ -3,5 +3,15 @@ chapter IOG
 session Thorn_Calculus = HOL +
   description
     \<open>A general-purpose process calculus with support for arbitrary data.\<close>
+  sessions
+    Equivalence_Reasoner
+    Transition_Systems
+  theories
+    "Thorn_Calculus-Foundations"
+    "Thorn_Calculus-Processes"
+    "Thorn_Calculus-Actions"
+    "Thorn_Calculus-Semantics-Synchronous"
+    "Thorn_Calculus-Semantics-Asynchronous"
+    "Thorn_Calculus-Core_Bisimilarities"
   document_files
     "root.tex"
