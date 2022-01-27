@@ -2,7 +2,7 @@ section \<open>Processes\<close>
 
 theory "Thorn_Calculus-Processes"
 imports
-  "Relation_Methods.Equivalence"
+  "Equivalence_Reasoner.Equivalence_Reasoner"
   "Transition_Systems-New.Transition_Systems-Foundations" \<comment> \<open>for the \<^const>\<open>compower\<close> notation\<close>
   "Thorn_Calculus-Foundations"
   "HOL-Library.BNF_Corec"

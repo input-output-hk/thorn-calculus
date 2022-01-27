@@ -2,7 +2,6 @@ section \<open>Synchronous Semantics\<close>
 
 theory "Thorn_Calculus-Semantics-Synchronous"
 imports
-  "Relation_Methods.Equivalence"
   "Transition_Systems-New.Transition_Systems-Weak_Mutation_Systems"
   "Thorn_Calculus-Actions"
   "Thorn_Calculus-Processes"
@@ -1756,69 +1755,32 @@ lemma wrapped_remove_adapted_is_compatible_with_synchronous_bisimilarity:
     assms
   by simp
 
-quotient_type synchronous_behavior = "process family" / "(\<sim>\<^sub>s)"
-  using synchronous.bisimilarity_is_equivalence .
+declare synchronous.bisimilarity_is_equivalence [equivalence]
 
-declare synchronous_behavior.abs_eq_iff [equivalence_transfer]
+lemma [compatibility]:
+  shows "P \<parallel> Q \<sim>\<^sub>s canonical (\<sim>\<^sub>s) P \<parallel> canonical (\<sim>\<^sub>s) Q"
+  using parallel_is_compatible_with_synchronous_bisimilarity
+  sorry
 
-lift_definition
-  synchronous_behavior_stop :: synchronous_behavior
-  is stop .
+lemma [compatibility]:
+  shows "\<Prod>v \<leftarrow> vs. \<P> v \<sim>\<^sub>s \<Prod>v \<leftarrow> vs. canonical (\<sim>\<^sub>s) (\<P> v)"
+  using general_parallel_is_compatible_with_synchronous_bisimilarity
+  sorry
 
-declare synchronous_behavior_stop.abs_eq [equivalence_transfer]
+lemma [compatibility]:
+  shows "\<star> P \<sim>\<^sub>s \<star> (canonical (\<sim>\<^sub>s) P)"
+  using create_channel_is_compatible_with_synchronous_bisimilarity
+  sorry
 
-lift_definition
-  synchronous_behavior_send :: "chan family \<Rightarrow> val family \<Rightarrow> synchronous_behavior"
-  is send .
+lemma [compatibility]:
+  shows "\<langle>t\<rangle> \<star> P \<sim>\<^sub>s \<langle>t\<rangle> \<star> (canonical (\<sim>\<^sub>s) P)"
+  using tagged_create_channel_is_compatible_with_synchronous_bisimilarity
+  sorry
 
-declare synchronous_behavior_send.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> synchronous_behavior"
-  is receive .
-
-declare synchronous_behavior_receive.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_parallel :: "
-    synchronous_behavior \<Rightarrow>
-    synchronous_behavior \<Rightarrow>
-    synchronous_behavior"
-  is parallel
-  using parallel_is_compatible_with_synchronous_bisimilarity .
-
-declare synchronous_behavior_parallel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_general_parallel :: "
-    ('a \<Rightarrow> synchronous_behavior) \<Rightarrow>
-    'a list \<Rightarrow>
-    synchronous_behavior"
-  is general_parallel
-  using general_parallel_is_compatible_with_synchronous_bisimilarity .
-
-declare synchronous_behavior_general_parallel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_create_channel :: "synchronous_behavior \<Rightarrow> synchronous_behavior"
-  is create_channel
-  using create_channel_is_compatible_with_synchronous_bisimilarity .
-
-declare synchronous_behavior_create_channel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_tagged_create_channel :: "nat \<Rightarrow> synchronous_behavior \<Rightarrow> synchronous_behavior"
-  is tagged_create_channel
-  using tagged_create_channel_is_compatible_with_synchronous_bisimilarity .
-
-declare synchronous_behavior_tagged_create_channel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_behavior_wrapped_remove_adapted :: "synchronous_behavior \<Rightarrow> nat \<Rightarrow> synchronous_behavior"
-  is wrapped_remove_adapted
-  using wrapped_remove_adapted_is_compatible_with_synchronous_bisimilarity .
-
-declare synchronous_behavior_wrapped_remove_adapted.abs_eq [equivalence_transfer]
+lemma [compatibility]:
+  shows "wrapped_remove_adapted P i \<sim>\<^sub>s wrapped_remove_adapted (canonical (\<sim>\<^sub>s) P) i"
+  using wrapped_remove_adapted_is_compatible_with_synchronous_bisimilarity
+  sorry
 
 text \<open>
   Now for weak bisimilarity.
@@ -1927,69 +1889,32 @@ lemma wrapped_remove_adapted_is_compatible_with_synchronous_weak_bisimilarity:
   unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
   by simp
 
-quotient_type synchronous_weak_behavior = "process family" / "(\<approx>\<^sub>s)"
-  using synchronous.weak.bisimilarity_is_equivalence .
+declare synchronous.weak.bisimilarity_is_equivalence [equivalence]
 
-declare synchronous_weak_behavior.abs_eq_iff [equivalence_transfer]
+lemma [compatibility]:
+  shows "P \<parallel> Q \<approx>\<^sub>s canonical (\<approx>\<^sub>s) P \<parallel> canonical (\<approx>\<^sub>s) Q"
+  using parallel_is_compatible_with_synchronous_weak_bisimilarity
+  sorry
 
-lift_definition
-  synchronous_weak_behavior_stop :: synchronous_weak_behavior
-  is stop .
+lemma [compatibility]:
+  shows "\<Prod>v \<leftarrow> vs. \<P> v \<approx>\<^sub>s \<Prod>v \<leftarrow> vs. canonical (\<approx>\<^sub>s) (\<P> v)"
+  using general_parallel_is_compatible_with_synchronous_weak_bisimilarity
+  sorry
 
-declare synchronous_weak_behavior_stop.abs_eq [equivalence_transfer]
+lemma [compatibility]:
+  shows "\<star> P \<approx>\<^sub>s \<star> (canonical (\<approx>\<^sub>s) P)"
+  using create_channel_is_compatible_with_synchronous_weak_bisimilarity
+  sorry
 
-lift_definition
-  synchronous_weak_behavior_send :: "chan family \<Rightarrow> val family \<Rightarrow> synchronous_weak_behavior"
-  is send .
+lemma [compatibility]:
+  shows "\<langle>t\<rangle> \<star> P \<approx>\<^sub>s \<langle>t\<rangle> \<star> (canonical (\<approx>\<^sub>s) P)"
+  using tagged_create_channel_is_compatible_with_synchronous_weak_bisimilarity
+  sorry
 
-declare synchronous_weak_behavior_send.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> synchronous_weak_behavior"
-  is receive .
-
-declare synchronous_weak_behavior_receive.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_parallel :: "
-    synchronous_weak_behavior \<Rightarrow>
-    synchronous_weak_behavior \<Rightarrow>
-    synchronous_weak_behavior"
-  is parallel
-  using parallel_is_compatible_with_synchronous_weak_bisimilarity .
-
-declare synchronous_weak_behavior_parallel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_general_parallel :: "
-    ('a \<Rightarrow> synchronous_weak_behavior) \<Rightarrow>
-    'a list \<Rightarrow>
-    synchronous_weak_behavior"
-  is general_parallel
-  using general_parallel_is_compatible_with_synchronous_weak_bisimilarity .
-
-declare synchronous_weak_behavior_general_parallel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_create_channel :: "synchronous_weak_behavior \<Rightarrow> synchronous_weak_behavior"
-  is create_channel
-  using create_channel_is_compatible_with_synchronous_weak_bisimilarity .
-
-declare synchronous_weak_behavior_create_channel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_tagged_create_channel :: "nat \<Rightarrow> synchronous_weak_behavior \<Rightarrow> synchronous_weak_behavior"
-  is tagged_create_channel
-  using tagged_create_channel_is_compatible_with_synchronous_weak_bisimilarity .
-
-declare synchronous_weak_behavior_tagged_create_channel.abs_eq [equivalence_transfer]
-
-lift_definition
-  synchronous_weak_behavior_wrapped_remove_adapted :: "synchronous_weak_behavior \<Rightarrow> nat \<Rightarrow> synchronous_weak_behavior"
-  is wrapped_remove_adapted
-  using wrapped_remove_adapted_is_compatible_with_synchronous_weak_bisimilarity .
-
-declare synchronous_behavior_wrapped_remove_adapted.abs_eq [equivalence_transfer]
+lemma [compatibility]:
+  shows "wrapped_remove_adapted P i \<approx>\<^sub>s wrapped_remove_adapted (canonical (\<approx>\<^sub>s) P) i"
+  using wrapped_remove_adapted_is_compatible_with_synchronous_weak_bisimilarity
+  sorry
 
 text \<open>
   Setup of automatic conversion from bisimilarities into weak bisimilarities.
