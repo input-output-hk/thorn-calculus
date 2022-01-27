@@ -36,6 +36,8 @@ jobs:
             unzip -d other-sessions/$account other-sessions/$repo.zip
             echo $PWD/other-sessions/$repo-master/${{ env.source-path }} >> $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
           done
+      - name: Check out repository
+        uses: actions/checkout@v2
       - name: Output debugging information
         run: |
           echo Working directory:\ $PWD
@@ -43,8 +45,6 @@ jobs:
           cat $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
           echo Contents of /__w/thorn-calculus:
           ls -lR /__w/thorn-calculus
-      - name: Check out repository
-        uses: actions/checkout@v2
       - name: Build
         run: /opt/Isabelle${{ env.isabelle-version }}/bin/isabelle build -o quick_and_dirty -o document=pdf -P output -D ${{ env.source-path }}
       - name: Upload document
