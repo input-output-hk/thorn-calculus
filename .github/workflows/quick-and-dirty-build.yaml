@@ -1,11 +1,11 @@
 name: Automated quick-and-dirty build
 
 env:
+  source-path: src
   isabelle-version: 2021-1
   other-isabelle-repos:
   chapter-name: IOG
   session-name: Thorn_Calculus
-  source-path: src
 
 on: [push]
 
@@ -34,7 +34,7 @@ jobs:
             mkdir --parents other-sessions/$account
             wget --no-verbose --output-document=other-sessions/$repo.zip https://github.com/$repo/archive/refs/heads/master.zip
             unzip -d other-sessions/$account other-sessions/$repo.zip
-            echo $PWD/other-sessions/$repo-master >> $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
+            echo $PWD/other-sessions/$repo-master/${{ env.source-path }} >> $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
           done
       - name: Check out repository
         uses: actions/checkout@v2
