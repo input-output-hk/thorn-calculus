@@ -36,6 +36,13 @@ jobs:
             unzip -d other-sessions/$account other-sessions/$repo.zip
             echo $PWD/other-sessions/$repo-master/${{ env.source-path }} >> $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
           done
+      - name: Output debugging information
+        run: |
+          echo Working directory:\ $PWD
+          echo Contents of per-user ROOTS file:
+          cat $HOME/.isabelle/Isabelle${{ env.isabelle-version }}/ROOTS
+          echo Contents of /__w/thorn-calculus:
+          ls -lR /__w/thorn-calculus
       - name: Check out repository
         uses: actions/checkout@v2
       - name: Build
