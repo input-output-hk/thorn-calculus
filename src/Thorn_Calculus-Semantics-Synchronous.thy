@@ -1920,6 +1920,6 @@ text \<open>
   Setup of automatic conversion from bisimilarities into weak bisimilarities.
 \<close>
 
-declare synchronous.bisimilarity_in_weak_bisimilarity [equivalence]
+declare synchronous.bisimilarity_in_weak_bisimilarity [inclusion]
 
 end
