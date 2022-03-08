@@ -1327,7 +1327,7 @@ end
 
 text \<open>
   We extend \<^theory_text>\<open>natural_simps\<close> with rules for eliminating duplicates of \<open>\<triangleright>\<^sup>\<infinity>\<close>-processes, which are
-  based on the observation that \<^const>\<open>multi_receive\<close> is idempotent.
+  based on the observation that \<^const>\<open>repeated_receive\<close> is idempotent.
 
   Incidentally, duplicate removal based on idempotence plays rather well with associativity and
   commutativity rules. The reason is the simplifier's handling of permutative rules, like
@@ -1347,23 +1347,23 @@ text \<open>
   commutativity rules.
 *)
 
-lemma multi_receive_idempotency [thorn_simps]:
+lemma repeated_receive_idempotency [thorn_simps]:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x"
   sorry
 
-lemma multi_receive_nested_idempotency [thorn_simps]:
+lemma repeated_receive_nested_idempotency [thorn_simps]:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q"
 proof -
   have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<sim>\<^sub>s (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> Q"
     using parallel_associativity
     by equivalence
   also have "\<dots> \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q"
-    using multi_receive_idempotency
+    using repeated_receive_idempotency
     by equivalence
   finally show ?thesis .
 qed
 
-lemma inner_multi_receive_redundancy:
+lemma inner_repeated_receive_redundancy:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y"
   sorry
 
@@ -1373,7 +1373,7 @@ lemma inner_multi_receive_redundancy:
   In particular, do the following:
 
     \<^item> Turn the detailed proofs that involve
-      \<^theory_text>\<open>multi_receive_is_quasi_compatible_with_synchronous_bisimilarity\<close> into single-step proofs
+      \<^theory_text>\<open>repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity\<close> into single-step proofs
       that use the \<^theory_text>\<open>bisimilarity\<close> proof method.
 
     \<^item> Merge the resulting proofs with adjacent proofs if \<^theory_text>\<open>bisimilarity\<close> can solve the whole step.
@@ -1406,7 +1406,7 @@ proof (induction xs arbitrary: \<Q>)
     by
       (intro
         parallel_is_right_compatible_with_synchronous_bisimilarity
-        multi_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
       )
 next
   case (Cons x xs \<Q>)
@@ -1440,7 +1440,7 @@ next
     by
       (intro
         parallel_is_right_compatible_with_synchronous_bisimilarity
-        multi_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
       )
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
     using parallel_associativity .
