@@ -1715,6 +1715,11 @@ lemma parallel_is_compatible_with_synchronous_bisimilarity:
     assms
   by (meson synchronous.bisimilarity_transitivity_rule)
 
+lemma repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity:
+  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<sim>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
+  sorry
+
 lemma general_parallel_is_compatible_with_synchronous_bisimilarity:
   assumes "\<And>v. \<P>\<^sub>1 v \<sim>\<^sub>s \<P>\<^sub>2 v"
   shows "\<Prod>v \<leftarrow> vs. \<P>\<^sub>1 v \<sim>\<^sub>s \<Prod>v \<leftarrow> vs. \<P>\<^sub>2 v"
@@ -1843,6 +1848,11 @@ lemma parallel_is_compatible_with_synchronous_weak_bisimilarity:
   and
     assms
   by (meson synchronous.weak.bisimilarity_transitivity_rule)
+
+lemma repeated_receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
+  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<approx>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<approx>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
+  sorry
 
 lemma general_parallel_is_compatible_with_synchronous_weak_bisimilarity:
   assumes "\<And>v. \<P>\<^sub>1 v \<approx>\<^sub>s \<P>\<^sub>2 v"

@@ -353,6 +353,27 @@ lemma environment_dependent_parallel:
   \<^theory_text>\<open>Thorn_Calculus-Communication\<close>.
 *)
 
+subsection \<open>Repeated Receiving\<close>
+
+corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
+  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
+syntax
+  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "A \<triangleright>\<^sup>\<infinity> x. P" \<rightleftharpoons> "CONST repeated_receive A (\<lambda>x. P)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
+\<close>
+
+lemma repeated_receive_proper_def:
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+  by (rule ext) (subst repeated_receive.code, simp)
+
+lemma adapted_after_repeated_receive:
+  shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
+  sorry
+
 text \<open>
   We define guarding of processes at the host-language level.
 \<close>
