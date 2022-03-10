@@ -1326,7 +1326,7 @@ qed
 end
 
 text \<open>
-  We extend \<^theory_text>\<open>natural_simps\<close> with rules for eliminating duplicates of \<open>\<triangleright>\<^sup>\<infinity>\<close>-processes, which are
+  We extend \<^theory_text>\<open>thorn_simps\<close> with rules for eliminating duplicates of \<open>\<triangleright>\<^sup>\<infinity>\<close>-processes, which are
   based on the observation that \<^const>\<open>repeated_receive\<close> is idempotent.
 
   Incidentally, duplicate removal based on idempotence plays rather well with associativity and
