@@ -18,11 +18,11 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"
       receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n)"
       using synchronous_transition.receiving .
     moreover
-    have "A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x) = \<nabla> (\<lambda>a. A \<triangleright> x. \<P> x a)"
+    have "A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x) = \<nabla> (\<lambda>b. A \<triangleright> x. \<P> x b)"
       unfolding tail_def
       by transfer simp
     moreover
-    have "receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n) = \<nabla>\<^bsub>n\<^esub> (\<lambda>a. receive_follow_up (\<lambda>x. \<P> x a) n X)"
+    have "receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n) = \<nabla>\<^bsub>n\<^esub> (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)"
       unfolding receive_follow_up_def
       by transfer (simp add: sdrop_shift)
     ultimately
