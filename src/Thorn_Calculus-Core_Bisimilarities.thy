@@ -15,24 +15,25 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"
     have "
       A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x)
       \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> remove n\<rparr>
-      (\<lambda>e. (\<nabla> (\<P> ((X \<guillemotleft> remove n) e)) \<guillemotleft> suffix n) e)"
-      using synchronous_transition.receiving [where \<P> = "\<nabla> \<circ> \<P>"]
-      by (simp only: comp_def)
+      receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n)"
+      using synchronous_transition.receiving .
     moreover
     have "A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x) = \<nabla> (\<lambda>a. A \<triangleright> x. \<P> x a)"
       unfolding tail_def
       by transfer simp
     moreover
-    have "(\<lambda>e. (\<nabla> (\<P> ((X \<guillemotleft> remove n) e)) \<guillemotleft> suffix n) e) = \<nabla>\<^bsub>n\<^esub> (\<lambda>a d. (\<P> (X d) a \<guillemotleft> suffix n) d)"
+    have "receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n) = \<nabla>\<^bsub>n\<^esub> (\<lambda>a. receive_follow_up (\<lambda>x. \<P> x a) n X)"
+      unfolding receive_follow_up_def
       by transfer (simp add: sdrop_shift)
     ultimately
-    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> b. (\<lambda>d. (\<P> (X d) b \<guillemotleft> suffix n) d)" (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?R")
+    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X"
       by (simp only: new_channel_io)
     moreover
-    have "?R = (\<lambda>d. ((\<nu> b. \<P> (X d) b) \<guillemotleft> suffix n) d)" (is "_ = ?S")
+    have "\<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X = receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X"
+      unfolding receive_follow_up_def
       by transfer simp
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = ?S\<close>
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X\<close>
       by (intro exI conjI, use in assumption) simp
   qed
 next
@@ -48,14 +49,15 @@ next
       by cases
     from new_channel_io(3) have "A' = A"
       by cases simp
-    have "\<Q> = (\<lambda>b e. (\<P> (X e) b \<guillemotleft> suffix n) e)"
+    have "\<Q> = (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)"
     proof -
       from new_channel_io(3)
-      have "\<nabla>\<^bsub>n\<^esub> \<Q> = (\<lambda>d. (\<nabla> (\<P> ((X \<guillemotleft> remove n) d)) \<guillemotleft> suffix n) d)" (is "_ = ?\<R>")
+      have "\<nabla>\<^bsub>n\<^esub> \<Q> = receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n)"
         by cases
-      then have "\<Delta>\<^bsub>n\<^esub> (\<nabla>\<^bsub>n\<^esub> \<Q>) = \<Delta>\<^bsub>n\<^esub> ?\<R>"
+      then have "\<Delta>\<^bsub>n\<^esub> (\<nabla>\<^bsub>n\<^esub> \<Q>) = \<Delta>\<^bsub>n\<^esub> (receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n))"
         by simp
       then show ?thesis
+        unfolding receive_follow_up_def
         by
           transfer
           (simp
@@ -63,16 +65,17 @@ next
             add: stake_shift sdrop_shift sdrop.simps(2) [where n = 0] stake_sdrop
           )
     qed
-    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> (\<lambda>e. ((\<nu> b. \<P> (X e) b) \<guillemotleft> suffix n) e)"
+    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X"
       using receiving .
     moreover
-    have "(\<lambda>e. ((\<nu> b. \<P> (X e) b) \<guillemotleft> suffix n) e) = \<nu> b. (\<lambda>e. (\<P> (X e) b \<guillemotleft> suffix n) e)"
+    have "receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X = \<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X"
+      unfolding receive_follow_up_def
       by transfer simp
     ultimately show ?thesis
       unfolding
         \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close>
       and
-        \<open>S = \<nu> b. \<Q> b\<close> and \<open>\<Q> = (\<lambda>b e. (\<P> (X e) b \<guillemotleft> suffix n) e)\<close>
+        \<open>S = \<nu> b. \<Q> b\<close> and \<open>\<Q> = (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)\<close>
       by (intro exI conjI, use in assumption) simp
   next
     case new_channel_communication
@@ -1495,19 +1498,17 @@ lemma inner_general_parallel_redundancy:
   shows "\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
 proof (induction xs arbitrary: \<Q>)
   case Nil
-  have
-    "(\<lambda>e. ((\<zero> \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e) \<sim>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
-    (is "?v \<sim>\<^sub>s ?w")
-    for n and X
+  have "receive_follow_up (\<lambda>x. \<zero> \<parallel> \<Q> x) n X \<sim>\<^sub>s receive_follow_up \<Q> n X" for n and X
   proof -
-    have "?v = (\<lambda>e. (\<zero> \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
+    have "(\<lambda>e. ((\<zero> \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e) = (\<lambda>e. (\<zero> \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
     also have "\<dots> = \<zero> \<guillemotleft> suffix n \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (subst environment_dependent_parallel) (fact refl)
-    also have "\<dots> \<sim>\<^sub>s ?w"
+    also have "\<dots> \<sim>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       unfolding adapted_after_stop
       using parallel_left_identity .
-    finally show ?thesis .
+    finally show ?thesis
+      unfolding receive_follow_up_def .
   qed
   then show ?case
     unfolding general_parallel.simps(1)
@@ -1519,13 +1520,15 @@ proof (induction xs arbitrary: \<Q>)
 next
   case (Cons x xs \<Q>)
   have "
-    (\<lambda>e. (((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e)
+    receive_follow_up (\<lambda>y. (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y) n X
     \<sim>\<^sub>s
-    (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> (X e))) \<guillemotleft> suffix n) e)"
-    (is "?v \<sim>\<^sub>s ?w")
+    receive_follow_up (\<lambda>y. \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)) n X"
     for n and X
   proof -
-    have "?v = (\<lambda>e. ((\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
+    have "
+      (\<lambda>e. (((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e)
+      =
+      (\<lambda>e. ((\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
     also have "\<dots> = (\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (subst environment_dependent_parallel) (fact refl)
@@ -1537,9 +1540,10 @@ next
       by
         (subst (3) environment_dependent_parallel, subst (4) environment_dependent_parallel)
         (fact refl)
-    also have "\<dots> = ?w"
+    also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> (X e))) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
-    finally show ?thesis .
+    finally show ?thesis
+      unfolding receive_follow_up_def .
   qed
   then have "
     (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. ((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)

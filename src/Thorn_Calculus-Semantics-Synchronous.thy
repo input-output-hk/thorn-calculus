@@ -82,6 +82,36 @@ proof
   finally show "X' = ?X'" .
 qed
 
+definition receive_follow_up :: "(val \<Rightarrow> process family) \<Rightarrow> nat \<Rightarrow> val family \<Rightarrow> process family" where
+  [simp]: "receive_follow_up \<P> n X = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e)"
+
+lemma on_suffix_adapted_after_receive_follow_up:
+  shows "receive_follow_up \<P> n X \<guillemotleft> on_suffix n \<E> = receive_follow_up (\<lambda>x. \<P> x \<guillemotleft> \<E>) n (X \<guillemotleft> on_suffix n \<E>)"
+proof -
+  have "
+    (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<guillemotleft> on_suffix n \<E>
+    =
+    (\<lambda>e. (\<P> ((X \<guillemotleft> on_suffix n \<E>) e) \<guillemotleft> suffix n \<guillemotleft> on_suffix n \<E>) e)"
+    by transfer (simp only: comp_def)
+  also have "\<dots> = (\<lambda>e. (\<P> ((X \<guillemotleft> on_suffix n \<E>) e) \<guillemotleft> \<E> \<guillemotleft> suffix n) e)"
+    by (simp only: composition_adapted [symmetric] suffix_after_on_suffix)
+  finally show ?thesis
+    unfolding receive_follow_up_def .
+qed
+
+lemma move_adapted_after_receive_follow_up:
+  assumes "i < n" and "j < n"
+  shows "receive_follow_up \<P> n X \<guillemotleft> move i j = receive_follow_up \<P> n (X \<guillemotleft> move i j)"
+proof -
+  have "(\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<guillemotleft> move i j = (\<lambda>e. (\<P> ((X \<guillemotleft> move i j) e) \<guillemotleft> suffix n \<guillemotleft> move i j) e)"
+    by transfer (simp only: comp_def)
+  also have "\<dots> = (\<lambda>e. (\<P> ((X \<guillemotleft> move i j) e) \<guillemotleft> suffix n) e)"
+    using assms
+    by (simp only: composition_adapted [symmetric] suffix_after_move)
+  finally show ?thesis
+    unfolding receive_follow_up_def .
+qed
+
 inductive
   synchronous_transition :: "action \<Rightarrow> process family relation"
   (\<open>'(\<rightarrow>\<^sub>s\<lparr>_\<rparr>')\<close>)
@@ -103,7 +133,7 @@ where
     and
       "\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> Q \<guillemotleft> move n i" |
   receiving:
-    "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e)" |
+    "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up \<P> n X" |
   communication:
     "P \<parallel> Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> \<star>\<^bsup>n\<^esup> (P' \<parallel> Q')"
     if "\<eta> \<noteq> \<mu>" and "P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> P'" and "Q \<rightarrow>\<^sub>s\<lparr>IO \<mu> A n X\<rparr> Q'" |
@@ -197,17 +227,11 @@ next
   have "
     A \<guillemotleft> \<E> \<triangleright> x. \<P> x \<guillemotleft> \<E>
     \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> \<E> \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> on_suffix n \<E>\<rparr>
-    (\<lambda>e. (\<P> ((X \<guillemotleft> on_suffix n \<E>) e) \<guillemotleft> \<E> \<guillemotleft> suffix n) e)"
-    (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?Q'")
+    receive_follow_up (\<lambda>x. \<P> x \<guillemotleft> \<E>) n (X \<guillemotleft> on_suffix n \<E>)"
     using synchronous_transition.receiving .
-  moreover have "?Q' = (\<lambda>d. (\<P> (X d) \<guillemotleft> suffix n) d) \<guillemotleft> on_suffix n \<E>" (is "_ = ?R'")
-  proof -
-    have "?Q' = (\<lambda>e. (\<P> ((X \<guillemotleft> on_suffix n \<E>) e) \<guillemotleft> suffix n \<guillemotleft> on_suffix n \<E>) e)"
-      by (simp only: composition_adapted [symmetric] suffix_after_on_suffix)
-    also have "\<dots> = ?R'"
-      by transfer (simp only: comp_def)
-    finally show ?thesis .
-  qed
+  moreover
+  have "receive_follow_up (\<lambda>x. \<P> x \<guillemotleft> \<E>) n (X \<guillemotleft> on_suffix n \<E>) = receive_follow_up \<P> n X \<guillemotleft> on_suffix n \<E>"
+    using on_suffix_adapted_after_receive_follow_up [symmetric] .
   ultimately show ?case
     unfolding \<open>Receiving = \<eta>\<close> [symmetric]
     by (simp only: adapted_after_receive)
@@ -507,21 +531,12 @@ using assms proof (induction "A \<guillemotleft> \<E> \<triangleright> \<star>\<
   from \<open>A \<guillemotleft> \<E> \<triangleright> x. \<P>' x = S \<guillemotleft> \<E>\<close>
   obtain \<P> where "\<P>' = (\<lambda>x. \<P> x \<guillemotleft> \<E>)" and "S = A \<triangleright> x. \<P> x"
     by (blast elim: receive_and_adapted)
-  have "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e)"
-    (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?Q")
+  have "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up \<P> n X"
     using synchronous_transition.receiving .
   moreover
-  have "(\<lambda>d. (\<P>' ((X \<guillemotleft> on_suffix n \<E>) d) \<guillemotleft> suffix n) d) = ?Q \<guillemotleft> on_suffix n \<E>" (is "?R' = _")
-  proof -
-    have "?R' = (\<lambda>d. (\<P> ((X \<guillemotleft> on_suffix n \<E>) d) \<guillemotleft> \<E> \<guillemotleft> suffix n) d)"
-      unfolding \<open>\<P>' = (\<lambda>x. \<P> x \<guillemotleft> \<E>)\<close>
-      using refl .
-    also have "\<dots> = (\<lambda>d. (\<P> ((X \<guillemotleft> on_suffix n \<E>) d) \<guillemotleft> suffix n \<guillemotleft> on_suffix n \<E>) d)"
-      by (simp only: composition_adapted [symmetric] suffix_after_on_suffix)
-    also have "\<dots> = ?Q \<guillemotleft> on_suffix n \<E>"
-      by transfer (simp only: comp_def)
-    finally show ?thesis .
-  qed
+  have "receive_follow_up \<P>' n (X \<guillemotleft> on_suffix n \<E>) = receive_follow_up \<P> n X \<guillemotleft> on_suffix n \<E>"
+    unfolding \<open>\<P>' = (\<lambda>x. \<P> x \<guillemotleft> \<E>)\<close>
+    using on_suffix_adapted_after_receive_follow_up [symmetric] .
   ultimately show ?case
     using receiving(2)
     unfolding \<open>S = A \<triangleright> x. \<P> x\<close>
@@ -766,16 +781,19 @@ text \<open>
 
 private lemma move_adapted_receiving_target_production:
   shows "
+    receive_follow_up \<P> (Suc n) (X \<guillemotleft> move n (n + i))
+    =
+    receive_follow_up (\<lambda>x. \<P> x \<guillemotleft> remove i) n X \<guillemotleft> move n (n + i)"
+proof -
+  have "
     (\<lambda>e. (\<P> ((X \<guillemotleft> move n (n + i)) e) \<guillemotleft> suffix (Suc n)) e)
     =
-    (\<lambda>d. (\<P> (X d) \<guillemotleft> remove i \<guillemotleft> suffix n) d) \<guillemotleft> move n (n + i)"
-    (is "?Q = ?R")
-proof -
-  have "?Q = (\<lambda>e. (\<P> ((X \<guillemotleft> move n (n + i)) e) \<guillemotleft> remove i \<guillemotleft> suffix n \<guillemotleft> move n (n + i)) e)"
+    (\<lambda>e. (\<P> ((X \<guillemotleft> move n (n + i)) e) \<guillemotleft> remove i \<guillemotleft> suffix n \<guillemotleft> move n (n + i)) e)"
     by (simp only: successor_suffix_via_remove_and_move [where i = i] composition_adapted)
-  also have "\<dots> = ?R"
+  also have "\<dots> = (\<lambda>d. (\<P> (X d) \<guillemotleft> remove i \<guillemotleft> suffix n) d) \<guillemotleft> move n (n + i)"
     by transfer (simp only: comp_def)
-  finally show ?thesis .
+  finally show ?thesis
+    unfolding receive_follow_up_def .
 qed
 
 private lemma move_adapted_new_channel_io_inner_value_production:
@@ -809,10 +827,10 @@ using assms proof (induction "A \<guillemotleft> remove i \<triangleright> \<sta
   have "
     A \<triangleright> x. \<P> x
     \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>Suc n\<^esup> X \<guillemotleft> move n (n + i)\<rparr>
-    (\<lambda>e. (\<P> ((X \<guillemotleft> move n (n + i)) e) \<guillemotleft> suffix (Suc n)) e)"
-    (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?Q")
+    receive_follow_up \<P> (Suc n) (X \<guillemotleft> move n (n + i))"
     using synchronous_transition.receiving .
-  moreover have "?Q = (\<lambda>d. (\<P>' (X d) \<guillemotleft> suffix n) d) \<guillemotleft> move n (n + i)"
+  moreover
+  have "receive_follow_up \<P> (Suc n) (X \<guillemotleft> move n (n + i)) = receive_follow_up \<P>' n X \<guillemotleft> move n (n + i)"
     unfolding \<open>\<P>' = (\<lambda>x. \<P> x \<guillemotleft> remove i)\<close>
     using move_adapted_receiving_target_production .
   ultimately show ?case
@@ -894,8 +912,8 @@ private lemma receiving_transition_with_remove_adapted_source_part_backward_rule
 using assms
 proof (induction "A \<triangleright> \<star>\<^bsup>Suc n\<^esup> X \<guillemotleft> move n (n + i)" S "T \<guillemotleft> move n (n + i)" arbitrary: A X i T)
   case (receiving A \<P> X i T)
-  then have "T = (\<lambda>a. (\<P> (X a) \<guillemotleft> remove i \<guillemotleft> suffix n) a)"
-    by (simp add: move_adapted_receiving_target_production)
+  then have "T = receive_follow_up (\<lambda>x. \<P> x \<guillemotleft> remove i) n X"
+    by (simp only: move_adapted_receiving_target_production adapted_injectivity)
   then show ?case
     by (auto simp only: adapted_after_receive intro: synchronous_transition.receiving)
 next
@@ -969,18 +987,11 @@ private lemma receiving_transition_with_move_adapted_target_part_backward_rule:
 using \<open>S \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> T\<close> proof (induction "A \<triangleright> \<star>\<^bsup>n\<^esup> X" S T arbitrary: A X)
   case (receiving A \<P> X)
   have
-    "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move i j\<rparr> (\<lambda>e. (\<P> ((X \<guillemotleft> move i j) e) \<guillemotleft> suffix n) e)"
-    (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?Q")
+    "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move i j\<rparr> receive_follow_up \<P> n (X \<guillemotleft> move i j)"
     using synchronous_transition.receiving .
   moreover
-  have "?Q = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<guillemotleft> move i j"
-  proof -
-    from \<open>i < n\<close> and \<open>j < n\<close> have "?Q = (\<lambda>e. (\<P> ((X \<guillemotleft> move i j) e) \<guillemotleft> suffix n \<guillemotleft> move i j) e)"
-      by (simp only: composition_adapted [symmetric] suffix_after_move)
-    also have "\<dots> = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<guillemotleft> move i j"
-      by transfer (simp only: comp_def)
-    finally show ?thesis .
-  qed
+  have "receive_follow_up \<P> n (X \<guillemotleft> move i j) = receive_follow_up \<P> n X \<guillemotleft> move i j"
+    using move_adapted_after_receive_follow_up [symmetric, OF \<open>i < n\<close> \<open>j < n\<close>] .
   ultimately show ?case
     by (simp only:)
 next
@@ -1619,7 +1630,7 @@ qed
 *)
 
 lemma receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<sim>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  assumes "\<And>n X. receive_follow_up \<P> n X \<sim>\<^sub>s receive_follow_up \<Q> n X"
   shows "A \<triangleright> x. \<P> x \<sim>\<^sub>s A \<triangleright> x. \<Q> x"
 using assms
 proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.symmetric_up_to_rule [where \<F> = "[\<sim>\<^sub>s]"])
@@ -1716,7 +1727,7 @@ lemma parallel_is_compatible_with_synchronous_bisimilarity:
   by (meson synchronous.bisimilarity_transitivity_rule)
 
 lemma repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<sim>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  assumes "\<And>n X. receive_follow_up \<P> n X \<sim>\<^sub>s receive_follow_up \<Q> n X"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
   sorry
 
@@ -1802,7 +1813,7 @@ text \<open>
 *)
 
 lemma receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<approx>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  assumes "\<And>n X. receive_follow_up \<P> n X \<approx>\<^sub>s receive_follow_up \<Q> n X"
   shows "A \<triangleright> x. \<P> x \<approx>\<^sub>s A \<triangleright> x. \<Q> x"
 using assms unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
 proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.mixed.symmetric_up_to_rule [where \<F> = "[\<asymp>\<^sub>s]"])
@@ -1812,7 +1823,7 @@ proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.mixed.symmetric_up_to_
 next
   case simulation
   from simulation(2,1) show ?case
-    by cases (auto simp del: receive_def intro: synchronous_transition.receiving)
+    by cases (fastforce simp del: receive_def intro: synchronous_transition.receiving)
 qed respectful
 
 lemma parallel_is_right_compatible_with_synchronous_weak_bisimilarity:
@@ -1850,7 +1861,7 @@ lemma parallel_is_compatible_with_synchronous_weak_bisimilarity:
   by (meson synchronous.weak.bisimilarity_transitivity_rule)
 
 lemma repeated_receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<approx>\<^sub>s (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+  assumes "\<And>n X. receive_follow_up \<P> n X \<approx>\<^sub>s receive_follow_up \<Q> n X"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<approx>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
   sorry
 
