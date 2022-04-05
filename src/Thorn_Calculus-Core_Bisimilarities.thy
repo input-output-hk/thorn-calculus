@@ -1354,7 +1354,7 @@ lemma repeated_receive_evolution:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
   obtains n and X
   where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X"
-    and "Q = (\<lambda>e. ((\<P> (X e) \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) e)"
+    and "Q = repeated_receive_follow_up A \<P> n X"
   using assms
   by
     (subst (asm) (2) repeated_receive_proper_def)
@@ -1370,27 +1370,25 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     case (parallel_left_io \<eta> A' n X P')
     from \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
     have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and
-      "P' = (\<lambda>e. ((\<P> (X e) \<parallel> ?\<Omega>) \<guillemotleft> suffix n) e)" (is "P' = ?\<Omega>_deriv")
-      by (blast elim: repeated_receive_evolution)+
+      "P' = repeated_receive_follow_up A \<P> n X" (is "P' = ?\<Omega>_deriv")
+      by (fastforce elim: repeated_receive_evolution)+
     with \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
     have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
       by simp_all
     moreover
-    have eq_\<Omega>_deriv: "?\<Omega>_deriv = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<parallel> ?\<Omega> \<guillemotleft> suffix n" (is "_ = ?R \<parallel> _")
-      unfolding adapted_after_parallel
-      by fastforce
-    moreover
-    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (?R \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
-        by (subst eq_\<Omega>_deriv) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
+      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
+        by (subst repeated_receive_follow_up_split) (fact refl)
+      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
         using parallel_associativity .
       finally show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>P' = ?\<Omega>_deriv\<close> and \<open>S = P' \<parallel> ?\<Omega> \<guillemotleft> suffix n\<close>
+      unfolding
+        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>P' = ?\<Omega>_deriv\<close> and \<open>S = P' \<parallel> ?\<Omega> \<guillemotleft> suffix n\<close> and
+        repeated_receive_follow_up_split
       using composition_in_universe [
         OF
           suffix_adapted_mutation_in_universe
@@ -1401,26 +1399,25 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     case (parallel_right_io \<eta> A' n X Q')
     from \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
     have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and
-      "Q' = (\<lambda>e. ((\<P> (X e) \<parallel> ?\<Omega>) \<guillemotleft> suffix n) e)" (is "Q' = ?\<Omega>_deriv")
-      by (blast elim: repeated_receive_evolution)+
+      "Q' = repeated_receive_follow_up A \<P> n X" (is "Q' = ?\<Omega>_deriv")
+      by (fastforce elim: repeated_receive_evolution)+
     with \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
     have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
       by simp_all
     moreover
-    have eq_\<Omega>_deriv: "?\<Omega>_deriv = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<parallel> ?\<Omega> \<guillemotleft> suffix n" (is "_ = ?R \<parallel> _")
-      unfolding adapted_after_parallel by fastforce
-    moreover
-    have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv = ?\<Omega> \<guillemotleft> suffix n \<parallel> (?R \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
-        by (subst eq_\<Omega>_deriv) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
+      have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv = ?\<Omega> \<guillemotleft> suffix n \<parallel> (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
+        by (subst repeated_receive_follow_up_split) (fact refl)
+      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
         using parallel_left_commutativity .
       finally show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>Q' = ?\<Omega>_deriv\<close> and \<open>S = ?\<Omega> \<guillemotleft> suffix n \<parallel> Q'\<close>
+      unfolding
+        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>Q' = ?\<Omega>_deriv\<close> and \<open>S = ?\<Omega> \<guillemotleft> suffix n \<parallel> Q'\<close> and
+        repeated_receive_follow_up_split
       using composition_in_universe [
         OF
           suffix_adapted_mutation_in_universe
@@ -1434,25 +1431,22 @@ next
   proof (cases rule: repeated_receive_evolution [case_names receiving])
     case (receiving n X)
     from receiving and \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
-    have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> (\<lambda>e. ((\<P> (X e) \<parallel> ?\<Omega>) \<guillemotleft> suffix n) e)" (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?\<Omega>_deriv")
+    have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> repeated_receive_follow_up A \<P> n X" (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?\<Omega>_deriv")
       by (simp only:)
     then have "?\<Omega> \<parallel> ?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n"
       by (fact parallel_left_io)
     moreover
-    have eq_\<Omega>_deriv: "?\<Omega>_deriv = (\<lambda>e. (\<P> (X e) \<guillemotleft> suffix n) e) \<parallel> ?\<Omega> \<guillemotleft> suffix n" (is "_ = ?R \<parallel> _")
-      unfolding adapted_after_parallel by fastforce
-    moreover
-    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (?R \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
-        by (subst eq_\<Omega>_deriv) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s ?R \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
+      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
+        by (subst repeated_receive_follow_up_split) (fact refl)
+      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
         using parallel_associativity .
       finally show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = ?\<Omega>_deriv\<close>
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = ?\<Omega>_deriv\<close> and repeated_receive_follow_up_split
       using composition_in_universe [
         OF
           suffix_adapted_mutation_in_universe
