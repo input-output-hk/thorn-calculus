@@ -15,25 +15,25 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"
     have "
       A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x)
       \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> remove n\<rparr>
-      receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n)"
+      post_receive n (X \<guillemotleft> remove n) (\<lambda>x. \<nabla> (\<P> x))"
       using synchronous_transition.receiving .
     moreover
     have "A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x) = \<nabla> (\<lambda>b. A \<triangleright> x. \<P> x b)"
       unfolding tail_def
       by transfer simp
     moreover
-    have "receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n) = \<nabla>\<^bsub>n\<^esub> (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)"
-      unfolding receive_follow_up_def
+    have "post_receive n (X \<guillemotleft> remove n) (\<lambda>x. \<nabla> (\<P> x)) = \<nabla>\<^bsub>n\<^esub> (\<lambda>b. post_receive n X (\<lambda>x. \<P> x b))"
+      unfolding post_receive_def
       by transfer (simp add: sdrop_shift)
     ultimately
-    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X"
+    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> b. post_receive n X (\<lambda>x. \<P> x b)"
       by (simp only: new_channel_io)
     moreover
-    have "\<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X = receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X"
-      unfolding receive_follow_up_def
+    have "\<nu> b. post_receive n X (\<lambda>x. \<P> x b) = post_receive n X (\<lambda>x. \<nu> b. \<P> x b)"
+      unfolding post_receive_def
       by transfer simp
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X\<close>
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<nu> b. \<P> x b)\<close>
       by (intro exI conjI, use in assumption) simp
   qed
 next
@@ -49,15 +49,15 @@ next
       by cases
     from new_channel_io(3) have "A' = A"
       by cases simp
-    have "\<Q> = (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)"
+    have "\<Q> = (\<lambda>b. post_receive n X (\<lambda>x. \<P> x b))"
     proof -
       from new_channel_io(3)
-      have "\<nabla>\<^bsub>n\<^esub> \<Q> = receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n)"
+      have "\<nabla>\<^bsub>n\<^esub> \<Q> = post_receive n (X \<guillemotleft> remove n) (\<lambda>x. \<nabla> (\<P> x))"
         by cases
-      then have "\<Delta>\<^bsub>n\<^esub> (\<nabla>\<^bsub>n\<^esub> \<Q>) = \<Delta>\<^bsub>n\<^esub> (receive_follow_up (\<lambda>x. \<nabla> (\<P> x)) n (X \<guillemotleft> remove n))"
+      then have "\<Delta>\<^bsub>n\<^esub> (\<nabla>\<^bsub>n\<^esub> \<Q>) = \<Delta>\<^bsub>n\<^esub> (post_receive n (X \<guillemotleft> remove n) (\<lambda>x. \<nabla> (\<P> x)))"
         by simp
       then show ?thesis
-        unfolding receive_follow_up_def
+        unfolding post_receive_def
         by
           transfer
           (simp
@@ -65,17 +65,17 @@ next
             add: stake_shift sdrop_shift sdrop.simps(2) [where n = 0] stake_sdrop
           )
     qed
-    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X"
+    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<nu> b. \<P> x b)"
       using receiving .
     moreover
-    have "receive_follow_up (\<lambda>x. \<nu> b. \<P> x b) n X = \<nu> b. receive_follow_up (\<lambda>x. \<P> x b) n X"
-      unfolding receive_follow_up_def
+    have "post_receive n X (\<lambda>x. \<nu> b. \<P> x b) = \<nu> b. post_receive n X (\<lambda>x. \<P> x b)"
+      unfolding post_receive_def
       by transfer simp
     ultimately show ?thesis
       unfolding
         \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close>
       and
-        \<open>S = \<nu> b. \<Q> b\<close> and \<open>\<Q> = (\<lambda>b. receive_follow_up (\<lambda>x. \<P> x b) n X)\<close>
+        \<open>S = \<nu> b. \<Q> b\<close> and \<open>\<Q> = (\<lambda>b. post_receive n X (\<lambda>x. \<P> x b))\<close>
       by (intro exI conjI, use in assumption) simp
   next
     case new_channel_communication
@@ -1390,7 +1390,7 @@ lemma inner_general_parallel_redundancy:
   shows "\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
 proof (induction xs arbitrary: \<Q>)
   case Nil
-  have "receive_follow_up (\<lambda>x. \<zero> \<parallel> \<Q> x) n X \<sim>\<^sub>s receive_follow_up \<Q> n X" for n and X
+  have "post_receive n X (\<lambda>x. \<zero> \<parallel> \<Q> x) \<sim>\<^sub>s post_receive n X \<Q>" for n and X
   proof -
     have "(\<lambda>e. ((\<zero> \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e) = (\<lambda>e. (\<zero> \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
@@ -1400,7 +1400,7 @@ proof (induction xs arbitrary: \<Q>)
       unfolding adapted_after_stop
       using parallel_left_identity .
     finally show ?thesis
-      unfolding receive_follow_up_def .
+      unfolding post_receive_def .
   qed
   then show ?case
     unfolding general_parallel.simps(1)
@@ -1412,9 +1412,9 @@ proof (induction xs arbitrary: \<Q>)
 next
   case (Cons x xs \<Q>)
   have "
-    receive_follow_up (\<lambda>y. (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y) n X
+    post_receive n X (\<lambda>y. (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
     \<sim>\<^sub>s
-    receive_follow_up (\<lambda>y. \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)) n X"
+    post_receive n X (\<lambda>y. \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
     for n and X
   proof -
     have "
@@ -1435,7 +1435,7 @@ next
     also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> (X e))) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
     finally show ?thesis
-      unfolding receive_follow_up_def .
+      unfolding post_receive_def .
   qed
   then have "
     (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. ((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
