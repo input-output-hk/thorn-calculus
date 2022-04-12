@@ -112,13 +112,14 @@ proof -
     unfolding receive_follow_up_def .
 qed
 
-abbreviation repeated_receive_follow_up :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> nat \<Rightarrow> val family \<Rightarrow> process family" where
-  "repeated_receive_follow_up A \<P> n X \<equiv> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X"
-
-lemma repeated_receive_follow_up_split:
-  shows "repeated_receive_follow_up A \<P> n X = receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+(*FIXME:
+  Use `post_receive_after_parallel` instead once #24 is merged and, of course, we start using
+  `post_receive` instead of `receive_follow_up` as per #37.
+*)
+lemma receive_follow_up_after_parallel:
+  shows "receive_follow_up (\<lambda>x. \<P> x \<parallel> \<Q> x) n X = receive_follow_up \<P> n X \<parallel> receive_follow_up \<Q> n X"
   unfolding receive_follow_up_def and adapted_after_parallel
-  by fastforce
+  by (simp only: parallel_def)
 
 inductive
   synchronous_transition :: "action \<Rightarrow> process family relation"

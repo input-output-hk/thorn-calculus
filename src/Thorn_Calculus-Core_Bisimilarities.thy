@@ -1354,7 +1354,7 @@ lemma repeated_receive_evolution:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
   obtains n and X
   where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X"
-    and "Q = repeated_receive_follow_up A \<P> n X"
+    and "Q = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X"
   using assms
   by
     (subst (asm) (2) repeated_receive_proper_def)
@@ -1362,67 +1362,89 @@ lemma repeated_receive_evolution:
      fastforce intro: repeated_receive_proper_def)
 
 lemma repeated_receive_idempotency [thorn_simps]:
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x" (is "?\<Omega> \<parallel> ?\<Omega> \<sim>\<^sub>s ?\<Omega>")
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M>"])
   case (forward_simulation \<alpha> S)
   then show ?case
   proof cases
     case (parallel_left_io \<eta> A' n X P')
-    from \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
-    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and
-      "P' = repeated_receive_follow_up A \<P> n X" (is "P' = ?\<Omega>_deriv")
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
+    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "P' = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X"
       by (fastforce elim: repeated_receive_evolution)+
-    with \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
-    have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
-      by simp_all
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
+      by (simp_all only:)
     moreover
-    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "
+      receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n
+      \<sim>\<^sub>s
+      receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
-        by (subst repeated_receive_follow_up_split) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
-        using parallel_associativity .
-      finally show ?thesis
+      have "
+        receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X
+        =
+        receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        using receive_follow_up_after_parallel
+        by simp
+      then have "
+        receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n
+        \<sim>\<^sub>s
+        receive_follow_up \<P> n X \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
+        by (simp only: parallel_associativity)
+      then show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
       unfolding
-        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>P' = ?\<Omega>_deriv\<close> and \<open>S = P' \<parallel> ?\<Omega> \<guillemotleft> suffix n\<close> and
-        repeated_receive_follow_up_split
-      using composition_in_universe [
-        OF
-          suffix_adapted_mutation_in_universe
-          parallel_mutation_in_universe
-      ]
+        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>P' = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X\<close> and
+        \<open>S = P' \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
+      using
+        receive_follow_up_after_parallel and
+        composition_in_universe [
+          OF
+            suffix_adapted_mutation_in_universe
+            parallel_mutation_in_universe
+        ]
       by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
   next
     case (parallel_right_io \<eta> A' n X Q')
-    from \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
-    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and
-      "Q' = repeated_receive_follow_up A \<P> n X" (is "Q' = ?\<Omega>_deriv")
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
+    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "Q' = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X"
       by (fastforce elim: repeated_receive_evolution)+
-    with \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
-    have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
-      by simp_all
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
+      by (simp_all only:)
     moreover
-    have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "
+      (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X
+      \<sim>\<^sub>s
+      receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega>_deriv = ?\<Omega> \<guillemotleft> suffix n \<parallel> (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
-        by (subst repeated_receive_follow_up_split) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
-        using parallel_left_commutativity .
-      finally show ?thesis
+      have "
+        receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X
+        =
+        receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        using receive_follow_up_after_parallel
+        by simp
+      then have "
+        (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X
+        \<sim>\<^sub>s
+        receive_follow_up \<P> n X \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
+        by (simp only: parallel_left_commutativity)
+      then show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
       unfolding
-        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>Q' = ?\<Omega>_deriv\<close> and \<open>S = ?\<Omega> \<guillemotleft> suffix n \<parallel> Q'\<close> and
-        repeated_receive_follow_up_split
-      using composition_in_universe [
-        OF
-          suffix_adapted_mutation_in_universe
-          parallel_mutation_in_universe
-      ]
+        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>Q' = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X\<close> and
+        \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q'\<close>
+      using
+        receive_follow_up_after_parallel and
+        composition_in_universe [
+          OF
+            suffix_adapted_mutation_in_universe
+            parallel_mutation_in_universe
+        ]
       by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
   qed (blast elim: repeated_receive_evolution(1))+
 next
@@ -1430,28 +1452,43 @@ next
   then show ?case
   proof (cases rule: repeated_receive_evolution [case_names receiving])
     case (receiving n X)
-    from receiving and \<open>?\<Omega> \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
-    have "?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> repeated_receive_follow_up A \<P> n X" (is "_ \<rightarrow>\<^sub>s\<lparr>_\<rparr> ?\<Omega>_deriv")
+    from receiving and \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X"
       by (simp only:)
-    then have "?\<Omega> \<parallel> ?\<Omega> \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> ?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n"
+    then have "
+      A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x
+      \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
       by (fact parallel_left_io)
     moreover
-    have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<parallel> ?\<Omega>) \<guillemotleft> suffix n"
+    have "
+      receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n
+      \<sim>\<^sub>s
+      receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     proof -
-      have "?\<Omega>_deriv \<parallel> ?\<Omega> \<guillemotleft> suffix n = (receive_follow_up \<P> n X \<parallel> ?\<Omega> \<guillemotleft> suffix n) \<parallel> ?\<Omega> \<guillemotleft> suffix n"
-        by (subst repeated_receive_follow_up_split) (fact refl)
-      also have "\<dots> \<sim>\<^sub>s receive_follow_up \<P> n X \<parallel> (?\<Omega> \<guillemotleft> suffix n \<parallel> ?\<Omega> \<guillemotleft> suffix n)"
-        using parallel_associativity .
-      finally show ?thesis
+      have "
+        receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X
+        =
+        receive_follow_up \<P> n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        using receive_follow_up_after_parallel
+        by simp
+      then have "
+        receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n
+        \<sim>\<^sub>s
+        receive_follow_up \<P> n X \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
+        by (simp only: parallel_associativity)
+      then show ?thesis
         by (simp only: adapted_after_parallel)
     qed
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = ?\<Omega>_deriv\<close> and repeated_receive_follow_up_split
-      using composition_in_universe [
-        OF
-          suffix_adapted_mutation_in_universe
-          parallel_mutation_in_universe
-      ]
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = receive_follow_up (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) n X\<close>
+      using
+        receive_follow_up_after_parallel and
+        composition_in_universe [
+          OF
+            suffix_adapted_mutation_in_universe
+            parallel_mutation_in_universe
+        ]
       by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
   qed
 qed respectful
