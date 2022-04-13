@@ -113,12 +113,11 @@ proof -
 qed
 
 (*FIXME:
-  Use `post_receive_after_parallel` instead once #24 is merged and, of course, we start using
-  `post_receive` instead of `receive_follow_up` as per #37.
+  Remove the following lemma once #24 is merged.
 *)
-lemma receive_follow_up_after_parallel:
-  shows "receive_follow_up (\<lambda>x. \<P> x \<parallel> \<Q> x) n X = receive_follow_up \<P> n X \<parallel> receive_follow_up \<Q> n X"
-  unfolding receive_follow_up_def and adapted_after_parallel
+lemma post_receive_after_parallel:
+  shows "post_receive n X (\<lambda>x. \<P> x \<parallel> \<Q> x) = post_receive n X \<P> \<parallel> post_receive n X \<Q>"
+  unfolding post_receive_def and adapted_after_parallel
   by (simp only: parallel_def)
 
 inductive
