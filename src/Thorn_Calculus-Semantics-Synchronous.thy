@@ -112,13 +112,30 @@ proof -
     unfolding post_receive_def .
 qed
 
-(*FIXME:
-  Remove the following lemma once #24 is merged.
-*)
+lemma post_receive_after_stop:
+  shows "post_receive n X (\<lambda>_. \<zero>) = \<zero>"
+  unfolding post_receive_def and adapted_after_stop
+  using refl .
+
+lemma post_receive_after_send:
+  shows "post_receive n X (\<lambda>x. \<A> x \<triangleleft> \<Y> x) = post_receive n X \<A> \<triangleleft> post_receive n X \<Y>"
+  unfolding post_receive_def and adapted_after_send
+  by (simp only: send_def)
+
+lemma post_receive_after_receive:
+  shows "post_receive n X (\<lambda>x. \<A> x \<triangleright> y. \<P> x y) = post_receive n X \<A> \<triangleright> y. post_receive n X (\<lambda>x. \<P> x y)"
+  unfolding post_receive_def and adapted_after_receive
+  by (simp only: receive_def)
+
 lemma post_receive_after_parallel:
   shows "post_receive n X (\<lambda>x. \<P> x \<parallel> \<Q> x) = post_receive n X \<P> \<parallel> post_receive n X \<Q>"
   unfolding post_receive_def and adapted_after_parallel
   by (simp only: parallel_def)
+
+lemma post_receive_after_new_channel:
+  shows "post_receive n X (\<lambda>x. \<nu> a. \<P> x a) = \<nu> a. post_receive n X (\<lambda>x. \<P> x a)"
+  unfolding post_receive_def and adapted_after_new_channel
+  by (simp only: new_channel_def)
 
 inductive
   synchronous_transition :: "action \<Rightarrow> process family relation"
