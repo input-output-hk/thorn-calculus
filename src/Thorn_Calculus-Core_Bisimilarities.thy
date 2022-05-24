@@ -1350,17 +1350,6 @@ text \<open>
   commutativity rules.
 *)
 
-lemma transition_from_repeated_receive:
-  assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
-  obtains n and X
-  where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X"
-    and "Q = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  using assms
-  by
-    (subst (asm) (2) repeated_receive_proper_def)
-    (rotate_tac, induction \<alpha> "A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" Q rule: synchronous_transition.induct,
-     fastforce intro: repeated_receive_proper_def)
-
 lemma repeated_receive_idempotency [thorn_simps]:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M>"])
