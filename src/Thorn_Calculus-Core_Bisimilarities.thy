@@ -1350,7 +1350,7 @@ text \<open>
   commutativity rules.
 *)
 
-lemma repeated_receive_evolution:
+lemma transition_from_repeated_receive:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
   obtains n and X
   where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X"
@@ -1370,7 +1370,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     case (parallel_left_io \<eta> A' n X P')
     from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
     have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "P' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-      by (fastforce elim: repeated_receive_evolution)+
+      by (fastforce elim: transition_from_repeated_receive)+
     with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
     have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
       by (simp_all only:)
@@ -1410,7 +1410,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     case (parallel_right_io \<eta> A' n X Q')
     from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
     have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "Q' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-      by (fastforce elim: repeated_receive_evolution)+
+      by (fastforce elim: transition_from_repeated_receive)+
     with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
     have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
       by (simp_all only:)
@@ -1446,11 +1446,11 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
             parallel_mutation_in_universe
         ]
       by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
-  qed (blast elim: repeated_receive_evolution(1))+
+  qed (blast elim: transition_from_repeated_receive(1))+
 next
   case (backward_simulation \<alpha> S)
   then show ?case
-  proof (cases rule: repeated_receive_evolution [case_names receiving])
+  proof (cases rule: transition_from_repeated_receive [case_names receiving])
     case (receiving n X)
     from receiving and \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
     have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
