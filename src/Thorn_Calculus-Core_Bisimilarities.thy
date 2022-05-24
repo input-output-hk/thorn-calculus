@@ -1358,11 +1358,11 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
   proof cases
     case (parallel_left_io \<eta> A' n X P')
     from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
-    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "P' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+    have "\<eta> = Receiving" and "A = A'" and "P' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
       by (fastforce elim: transition_from_repeated_receive)+
-    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
-    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
-      by (simp_all only:)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> P'\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
     moreover
     have "
       post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n
@@ -1385,8 +1385,8 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     qed
     ultimately show ?thesis
       unfolding
-        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>P' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and
-        \<open>S = P' \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
+        \<open>\<eta> = Receiving\<close> and \<open>A = A'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close> and
+        \<open>P' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = P' \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
       using
         post_receive_after_parallel and
         composition_in_universe [
@@ -1398,11 +1398,11 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
   next
     case (parallel_right_io \<eta> A' n X Q')
     from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
-    have "A \<triangleright> \<star>\<^bsup>n\<^esup> X = IO \<eta> A' n X" and "Q' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+    have "\<eta> = Receiving" and "A = A'" and "Q' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
       by (fastforce elim: transition_from_repeated_receive)+
-    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close>
-    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" and \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close>
-      by (simp_all only:)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q'\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
     moreover
     have "
       (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)
@@ -1425,8 +1425,8 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     qed
     ultimately show ?thesis
       unfolding
-        \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>Q' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and
-        \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q'\<close>
+        \<open>\<eta> = Receiving\<close> and \<open>A = A'\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close> and
+        \<open>Q' = post_receive n X (\<lambda>v. \<P> v \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q'\<close>
       using
         post_receive_after_parallel and
         composition_in_universe [
