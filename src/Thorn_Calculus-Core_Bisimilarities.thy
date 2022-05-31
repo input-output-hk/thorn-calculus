@@ -1409,6 +1409,7 @@ proof (induction xs arbitrary: \<Q>)
         parallel_is_right_compatible_with_synchronous_bisimilarity
         repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
       )
+      simp
 next
   case (Cons x xs \<Q>)
   have "
@@ -1446,6 +1447,7 @@ next
         parallel_is_right_compatible_with_synchronous_bisimilarity
         repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
       )
+      simp
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
     using parallel_associativity .
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"

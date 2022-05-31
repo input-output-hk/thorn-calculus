@@ -137,6 +137,12 @@ lemma post_receive_after_new_channel:
   unfolding post_receive_def and adapted_after_new_channel
   by (simp only: new_channel_def)
 
+definition
+  receive_continuation_lifting :: "process family relation \<Rightarrow> (val \<Rightarrow> process family) relation"
+  (\<open>_\<^sup>\<sharp>\<close> [1000] 1000)
+where
+  [simp]: "K\<^sup>\<sharp> = (\<lambda>\<P> \<Q>. \<forall>n X. K (post_receive n X \<P>) (post_receive n X \<Q>))"
+
 inductive
   synchronous_transition :: "action \<Rightarrow> process family relation"
   (\<open>'(\<rightarrow>\<^sub>s\<lparr>_\<rparr>')\<close>)
@@ -1655,12 +1661,13 @@ qed
 *)
 
 lemma receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<sim>\<^sub>s post_receive n X \<Q>"
+  assumes "(\<sim>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright> x. \<P> x \<sim>\<^sub>s A \<triangleright> x. \<Q> x"
 using assms
 proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.symmetric_up_to_rule [where \<F> = "[\<sim>\<^sub>s]"])
   case symmetry
   then show ?case
+    unfolding receive_continuation_lifting_def
     by (blast intro: synchronous.bisimilarity_symmetry_rule)
 next
   case simulation
@@ -1752,7 +1759,7 @@ lemma parallel_is_compatible_with_synchronous_bisimilarity:
   by (meson synchronous.bisimilarity_transitivity_rule)
 
 lemma repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<sim>\<^sub>s post_receive n X \<Q>"
+  assumes "(\<sim>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
   sorry
 
@@ -1838,12 +1845,13 @@ text \<open>
 *)
 
 lemma receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<approx>\<^sub>s post_receive n X \<Q>"
+  assumes "(\<approx>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright> x. \<P> x \<approx>\<^sub>s A \<triangleright> x. \<Q> x"
 using assms unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
 proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.mixed.symmetric_up_to_rule [where \<F> = "[\<asymp>\<^sub>s]"])
   case symmetry
   then show ?case
+    unfolding receive_continuation_lifting_def
     by (blast intro: synchronous.mixed.bisimilarity_symmetry_rule)
 next
   case simulation
@@ -1886,7 +1894,7 @@ lemma parallel_is_compatible_with_synchronous_weak_bisimilarity:
   by (meson synchronous.weak.bisimilarity_transitivity_rule)
 
 lemma repeated_receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<approx>\<^sub>s post_receive n X \<Q>"
+  assumes "(\<approx>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<approx>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
   sorry
 
