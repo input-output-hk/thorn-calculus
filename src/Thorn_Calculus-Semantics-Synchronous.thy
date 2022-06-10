@@ -1654,6 +1654,136 @@ next
     by fastforce
 qed
 
+definition
+  receive_quasi_mutation :: "chan family \<Rightarrow> ((val \<Rightarrow> process family) \<Rightarrow> process family \<Rightarrow> bool)"
+  (\<open>{_ \<triangleright> \<partial>. \<hole> \<partial>}\<close> [53])
+where
+  [simp]: "{A \<triangleright> \<partial>. \<hole> \<partial>} \<P> S \<longleftrightarrow> S = A \<triangleright> x. \<P> x"
+
+definition
+  receive_lifting :: "process family relation \<Rightarrow> process family relation" (\<open>\<N>\<close>)
+where
+  [simp]: "\<N> = (\<lambda>K. \<Squnion>A. {A \<triangleright> \<partial>. \<hole> \<partial>}\<inverse>\<inverse> OO K\<^sup>\<sharp> OO {A \<triangleright> \<partial>. \<hole> \<partial>})"
+
+definition
+  mutant_and_receive_lifting :: "process family relation \<Rightarrow> process family relation" (\<open>\<L>\<close>)
+where
+  [simp]: "\<L> = \<M> \<squnion> \<N>"
+
+locale underlying_synchronous_mutation_system =
+  mutation_system
+    \<open>synchronous_transition\<close>
+    \<open>simulating_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>simulating_shortcut_transition\<close>
+    \<open>\<U>\<close>
+    \<open>synchronous_mutation_transition_std\<close>
+  for
+    simulating_transition :: "action \<Rightarrow> process family relation" (\<open>'(\<rightharpoondown>\<lparr>_\<rparr>')\<close>)
+  and
+    synchronous_shortcut_transition :: "action option \<Rightarrow> process family relation"
+  and
+    simulating_shortcut_transition :: "action option \<Rightarrow> process family relation"
+  +
+  assumes simulating_receiving:
+    "A \<triangleright> x. \<P> x \<rightharpoondown>\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P>"
+begin
+
+notation unilateral_progression (infix \<open>\<hookrightarrow>\<close> 50)
+notation shortcut_progression (infix \<open>\<leadsto>\<close> 50)
+notation bisimilarity (infix \<open>\<sim>\<close> 50)
+
+context begin
+
+private lemma unilateral_original_or_receive_progression:
+  assumes "K \<le> L" and "K \<hookrightarrow> L"
+  shows "(id \<squnion> \<N>) K \<hookrightarrow> (id \<squnion> \<N>) L"
+proof -
+  have "\<exists>T. A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>\<alpha>\<rparr> T \<and> K S T"
+    if "K\<^sup>\<sharp> \<P> \<Q>" and "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S"
+    for \<alpha> and A and \<P> and \<Q> and S
+  using \<open>A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close> proof cases
+    case (receiving n X)
+    have "A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<Q>"
+      using simulating_receiving .
+    with \<open>K\<^sup>\<sharp> \<P> \<Q>\<close> show ?thesis
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X \<P>\<close>
+      by (intro exI conjI, use in assumption) (simp only: receive_continuation_lifting_def)
+  qed
+  then have "(\<Squnion>A. {A \<triangleright> \<partial>. \<hole> \<partial>}\<inverse>\<inverse> OO K\<^sup>\<sharp> OO {A \<triangleright> \<partial>. \<hole> \<partial>})\<inverse>\<inverse> OO (\<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr>) \<le> (\<rightharpoondown>\<lparr>\<alpha>\<rparr>) OO K\<inverse>\<inverse>" for \<alpha>
+    by fastforce
+  then have "\<N> K \<hookrightarrow> K"
+    by simp
+  with \<open>K \<le> L\<close> have "\<N> K \<hookrightarrow> L"
+    by blast
+  with \<open>K \<hookrightarrow> L\<close> have "(id \<squnion> \<N>) K \<hookrightarrow> L"
+    by (simp, blast)
+  then show ?thesis
+    by (simp, blast)
+qed
+
+lemma mutant_and_receive_lifting_is_respectful [respectful]:
+  shows "respectful \<L>"
+proof -
+  have "(id \<squnion> \<N>) K \<leadsto> (id \<squnion> \<N>) L" (is "?\<O> K \<leadsto> ?\<O> L") if "K \<leadsto> L" for K and L
+  proof -
+    from \<open>K \<leadsto> L\<close> have "K \<le> L" and "K\<inverse>\<inverse> \<le> L\<inverse>\<inverse>" and "K \<hookrightarrow> L" and "K\<inverse>\<inverse> \<hookrightarrow> L\<inverse>\<inverse>"
+      by simp_all
+    from \<open>K \<le> L\<close> have "?\<O> K \<le> ?\<O> L"
+      by fastforce
+    moreover
+    from \<open>K \<le> L\<close> and \<open>K \<hookrightarrow> L\<close> have "?\<O> K \<hookrightarrow> ?\<O> L"
+      by (fact unilateral_original_or_receive_progression)
+    moreover
+    from \<open>K\<inverse>\<inverse> \<le> L\<inverse>\<inverse>\<close> and \<open>K\<inverse>\<inverse> \<hookrightarrow> L\<inverse>\<inverse>\<close> have "?\<O> K\<inverse>\<inverse> \<hookrightarrow> ?\<O> L\<inverse>\<inverse>"
+      by (fact unilateral_original_or_receive_progression)
+    moreover
+    have "?\<O> M\<inverse>\<inverse> = (?\<O> M)\<inverse>\<inverse>" for M
+      by fastforce
+    ultimately show ?thesis
+      unfolding shortcut_progression_def and bilateral_progression_def
+      by (metis (lifting) inf2I)
+  qed
+  then have "respectful (id \<squnion> \<N>)"
+    by simp
+  then have "respectful (\<M> \<squnion> id \<squnion> \<N>)"
+    using mutant_lifting_is_respectful and union_is_respectful
+    by (simp only: sup_assoc)
+  moreover have "id \<le> \<M>"
+    using equality_in_universe
+    by (force intro: le_funI)
+  ultimately have "respectful (\<M> \<squnion> \<N>)"
+    by (simp only: sup_absorb1)
+  then show ?thesis
+    unfolding mutant_and_receive_lifting_def .
+qed
+
+end
+
+lemma underlying_mutant_and_receive_lifted_bisimilarity_in_bisimilarity:
+  shows "\<L> (\<sim>) \<le> (\<sim>)"
+  using
+    respectfully_transformed_bisimilarity_in_bisimilarity
+      [OF mutant_and_receive_lifting_is_respectful] .
+
+end
+
+interpretation synchronous:
+  underlying_synchronous_mutation_system
+    \<open>synchronous_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+  using receiving
+  by unfold_locales
+
+interpretation synchronous.mixed:
+  underlying_synchronous_mutation_system
+    \<open>synchronous.weak_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>synchronous.weak_shortcut_transition\<close>
+  using receiving
+  by unfold_locales fastforce
+
 (*FIXME:
   Use a locale to prove the (quasi-)compatibility lemmas only once for \<^theory_text>\<open>synchronous\<close> and
   \<^theory_text>\<open>synchronous.weak\<close> and then also for \<^theory_text>\<open>synchronous.mixed\<close>. Do only the setup for the solvers
@@ -1663,17 +1793,18 @@ qed
 lemma receive_is_quasi_compatible_with_synchronous_bisimilarity:
   assumes "(\<sim>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright> x. \<P> x \<sim>\<^sub>s A \<triangleright> x. \<Q> x"
-using assms
-proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.symmetric_up_to_rule [where \<F> = "[\<sim>\<^sub>s]"])
-  case symmetry
-  then show ?case
-    unfolding receive_continuation_lifting_def
-    by (blast intro: synchronous.bisimilarity_symmetry_rule)
-next
-  case simulation
-  from simulation(2,1) show ?case
-    by cases (auto simp del: receive_def intro: synchronous_transition.receiving)
-qed respectful
+  using
+    synchronous.respectfully_transformed_bisimilarity_in_bisimilarity
+      [OF synchronous.mutant_and_receive_lifting_is_respectful]
+  and
+    assms
+  unfolding
+    mutant_and_receive_lifting_def
+  and
+    receive_lifting_def
+  and
+    receive_quasi_mutation_def
+  by (auto simp only: sup_apply)
 
 text \<open>
   We prove commutativity of parallel composition already here, since we need it to prove
@@ -1847,17 +1978,20 @@ text \<open>
 lemma receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
   assumes "(\<approx>\<^sub>s)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright> x. \<P> x \<approx>\<^sub>s A \<triangleright> x. \<Q> x"
-using assms unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
-proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.mixed.symmetric_up_to_rule [where \<F> = "[\<asymp>\<^sub>s]"])
-  case symmetry
-  then show ?case
-    unfolding receive_continuation_lifting_def
-    by (blast intro: synchronous.mixed.bisimilarity_symmetry_rule)
-next
-  case simulation
-  from simulation(2,1) show ?case
-    by cases (fastforce simp del: receive_def intro: synchronous_transition.receiving)
-qed respectful
+  using
+    synchronous.mixed.respectfully_transformed_bisimilarity_in_bisimilarity
+      [OF synchronous.mixed.mutant_and_receive_lifting_is_respectful]
+  and
+    assms
+  unfolding
+    synchronous.weak_bisimilarity_is_mixed_bisimilarity
+  and
+    mutant_and_receive_lifting_def
+  and
+    receive_lifting_def
+  and
+    receive_quasi_mutation_def
+  by (auto simp only: sup_apply)
 
 lemma parallel_is_right_compatible_with_synchronous_weak_bisimilarity:
   assumes "Q\<^sub>1 \<approx>\<^sub>s Q\<^sub>2"
