@@ -1387,9 +1387,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     ultimately show ?thesis
       unfolding
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close> and
-        \<open>P' = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = P' \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
+        \<open>P' = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = P' \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close> and
+        post_receive_after_parallel
       using
-        post_receive_after_parallel and
         composition_in_universe [
           OF
             suffix_adapted_mutation_in_universe
@@ -1428,9 +1428,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     ultimately show ?thesis
       unfolding
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>\<alpha> = IO \<eta> A' n X\<close> and
-        \<open>Q' = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q'\<close>
+        \<open>Q' = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q'\<close> and
+        post_receive_after_parallel
       using
-        post_receive_after_parallel and
         composition_in_universe [
           OF
             suffix_adapted_mutation_in_universe
@@ -1469,9 +1469,9 @@ next
       finally show ?thesis .
     qed
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close> and
+        post_receive_after_parallel
       using
-        post_receive_after_parallel and
         composition_in_universe [
           OF
             suffix_adapted_mutation_in_universe
