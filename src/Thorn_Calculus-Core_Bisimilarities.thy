@@ -1379,13 +1379,10 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
         =
         (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
         unfolding post_receive_after_parallel and post_receive_def ..
-      also have "
-        \<dots>
-        \<sim>\<^sub>s
-        post_receive n X \<P> \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
-        using parallel_associativity .
-      finally show ?thesis
-        by (simp only: adapted_after_parallel)
+      also have "\<dots> \<sim>\<^sub>s
+        post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        unfolding adapted_after_parallel using parallel_associativity .
+      finally show ?thesis .
     qed
     ultimately show ?thesis
       unfolding
@@ -1423,13 +1420,10 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
         =
         (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
         unfolding post_receive_after_parallel and post_receive_def ..
-      also have "
-        \<dots>
-        \<sim>\<^sub>s
-        post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
-        by (simp only: parallel_left_commutativity)
-      finally show ?thesis
-        by (simp only: adapted_after_parallel)
+      also have "\<dots> \<sim>\<^sub>s
+        post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        unfolding adapted_after_parallel using parallel_left_commutativity .
+      finally show ?thesis .
     qed
     ultimately show ?thesis
       unfolding
@@ -1469,13 +1463,10 @@ next
         =
         (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
         unfolding post_receive_after_parallel and post_receive_def ..
-      also have "
-        \<dots>
-        \<sim>\<^sub>s
-        post_receive n X \<P> \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n)"
-        using parallel_associativity .
-      finally show ?thesis
-        by (simp only: adapted_after_parallel)
+      also have "\<dots> \<sim>\<^sub>s
+        post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+        unfolding adapted_after_parallel using parallel_associativity .
+      finally show ?thesis .
     qed
     ultimately show ?thesis
       unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
