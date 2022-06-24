@@ -7,67 +7,6 @@ imports
   "Thorn_Calculus-Processes"
 begin
 
-definition dependent_on_chan_at :: "nat \<Rightarrow> 'a family \<Rightarrow> bool" where
-  [simp]: "dependent_on_chan_at i V \<longleftrightarrow> (\<exists>a\<^sub>1 a\<^sub>2. \<Delta>\<^bsub>i\<^esub> V a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> V a\<^sub>2)"
-
-lemma dependent_on_chan_at_after_on_suffix_adapted:
-  assumes "i \<le> n"
-  shows "dependent_on_chan_at i (V \<guillemotleft> on_suffix (Suc n) \<E>) \<longleftrightarrow> dependent_on_chan_at i V"
-proof -
-  have "
-    \<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>2
-    \<longleftrightarrow>
-    \<Delta>\<^bsub>i\<^esub> V a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> V a\<^sub>2"
-    for a\<^sub>1 and a\<^sub>2
-    using \<open>i \<le> n\<close>
-    by (simp only: deep_curry_after_on_suffix_adapted adapted_injectivity)
-  then show ?thesis
-    by simp
-qed
-
-lemma dependent_on_chan_at_after_source_anchored_move_adapted:
-  shows "dependent_on_chan_at i (V \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at j V"
-proof -
-  have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>j\<^esub> V"
-  proof -
-    have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>i\<^esub> (\<nabla>\<^bsub>i\<^esub> (\<Delta>\<^bsub>j\<^esub> V))"
-      by transfer simp
-    also have "\<dots> = \<Delta>\<^bsub>j\<^esub> V"
-      by (simp only: deep_curry_after_deep_uncurry pointfree_idE)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
-
-lemma dependent_on_chan_at_after_move_within_prefix_adapted:
-  assumes "i < n" and "j < n"
-  shows "dependent_on_chan_at n (V \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at n V"
-proof -
-  have "
-    \<Delta>\<^bsub>n\<^esub> (V \<guillemotleft> move i j) a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> (V \<guillemotleft> move i j) a\<^sub>2 \<longleftrightarrow> \<Delta>\<^bsub>n\<^esub> V a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> V a\<^sub>2"
-    for a\<^sub>1 and a\<^sub>2
-    using \<open>i < n\<close> and \<open>j < n\<close>
-    by (simp only: deeper_curry_after_move_adapted adapted_injectivity)
-  then show ?thesis
-    by simp
-qed
-
-lemma not_dependent_on_chan_at:
-  assumes "\<not> dependent_on_chan_at i V'"
-  obtains V where "V' = V \<guillemotleft> remove i"
-proof
-  have "V' = (\<lambda>e. V' (insert_at i (e !! i) (delete_at i e)))"
-    by (simp only: insert_at_after_delete_at)
-  also have "\<dots> = (\<lambda>e. V' (insert_at i undefined (delete_at i e)))"
-    using \<open>\<not> dependent_on_chan_at i V'\<close>
-    unfolding dependent_on_chan_at_def and deep_curry_def
-    by metis
-  also have "\<dots> = V' \<circ> insert_at i undefined \<guillemotleft> remove i" (is "_ = ?V'")
-    by transfer (simp only: comp_def)
-  finally show "V' = ?V'" .
-qed
-
 definition post_receive :: "nat \<Rightarrow> val family \<Rightarrow> (val \<Rightarrow> 'a family) \<Rightarrow> 'a family" where
   [simp]: "post_receive n X \<V> = (\<lambda>e. (\<V> (X e) \<guillemotleft> suffix n) e)"
 
