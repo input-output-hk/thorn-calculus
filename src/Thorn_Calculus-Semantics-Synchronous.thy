@@ -7,7 +7,7 @@ imports
   "Thorn_Calculus-Processes"
 begin
 
-definition dependent_on_chan_at :: "nat \<Rightarrow> val family \<Rightarrow> bool" where
+definition dependent_on_chan_at :: "nat \<Rightarrow> 'a family \<Rightarrow> bool" where
   [simp]: "dependent_on_chan_at i X \<longleftrightarrow> (\<exists>a\<^sub>1 a\<^sub>2. \<Delta>\<^bsub>i\<^esub> X a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> X a\<^sub>2)"
 
 lemma dependent_on_chan_at_after_on_suffix_adapted:
