@@ -1121,7 +1121,7 @@ lemma create_channel_mutation_power_def [simp]:
 definition adapted_mutation :: "adaptation \<Rightarrow> process family relation" (\<open>{\<hole> \<guillemotleft> _}\<close> [56]) where
   [simp]: "{\<hole> \<guillemotleft> \<E>} P S \<longleftrightarrow> S = P \<guillemotleft> \<E>"
 
-inductive_set universe :: "process family relation set" (\<open>\<U>\<close>) where
+inductive_set synchronous_universe :: "process family relation set" (\<open>\<U>\<close>) where
   parallel_mutation_in_universe:
     "{P \<parallel> \<hole>} \<in> \<U>" |
   create_channel_mutation_in_universe:
@@ -1244,7 +1244,7 @@ proof (unfold_locales, fold synchronous_shortcut_transition_def)
     using move_is_injective and on_suffix_is_injective
     by
       induction
-      (blast intro: universe.intros suffix_adapted_mutation_in_universe power_in_universe)+
+      (blast intro: synchronous_universe.intros suffix_adapted_mutation_in_universe power_in_universe)+
 next
   fix \<alpha>
   have "\<exists>\<omega> I'. I \<longrightarrow>\<^sub>s\<lparr>\<alpha> \<bar> \<omega>\<rparr> I' \<and> (\<exists> T'. T \<rightarrow>\<^sub>s\<^sup>?\<lparr>\<omega>\<rparr> T' \<and> I' T' S')"
