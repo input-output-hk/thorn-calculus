@@ -18,16 +18,9 @@ proof -
     \<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>2
     \<longleftrightarrow>
     \<Delta>\<^bsub>i\<^esub> V a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> V a\<^sub>2"
-    (is "?v \<longleftrightarrow> ?w")
     for a\<^sub>1 and a\<^sub>2
-  proof -
-    have "?v \<longleftrightarrow> \<Delta>\<^bsub>i\<^esub> V a\<^sub>1 \<guillemotleft> on_suffix n \<E> \<noteq> \<Delta>\<^bsub>i\<^esub> V a\<^sub>2 \<guillemotleft> on_suffix n \<E>"
-      using \<open>i \<le> n\<close>
-      by (simp only: deep_curry_after_on_suffix_adapted)
-    also have "\<dots> \<longleftrightarrow> ?w"
-      by (simp only: adapted_injectivity)
-    finally show ?thesis .
-  qed
+    using \<open>i \<le> n\<close>
+    by (simp only: deep_curry_after_on_suffix_adapted adapted_injectivity)
   then show ?thesis
     by simp
 qed
@@ -53,16 +46,9 @@ lemma dependent_on_chan_at_after_move_within_prefix_adapted:
 proof -
   have "
     \<Delta>\<^bsub>n\<^esub> (V \<guillemotleft> move i j) a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> (V \<guillemotleft> move i j) a\<^sub>2 \<longleftrightarrow> \<Delta>\<^bsub>n\<^esub> V a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> V a\<^sub>2"
-    (is "?v \<longleftrightarrow> ?w")
     for a\<^sub>1 and a\<^sub>2
-  proof -
-    have "?v \<longleftrightarrow> \<Delta>\<^bsub>n\<^esub> V a\<^sub>1 \<guillemotleft> move i j \<noteq> \<Delta>\<^bsub>n\<^esub> V a\<^sub>2 \<guillemotleft> move i j"
-      using \<open>i < n\<close> and \<open>j < n\<close>
-      by (simp only: deeper_curry_after_move_adapted)
-    also have "\<dots> \<longleftrightarrow> ?w"
-      by (simp only: adapted_injectivity)
-    finally show ?thesis .
-  qed
+    using \<open>i < n\<close> and \<open>j < n\<close>
+    by (simp only: deeper_curry_after_move_adapted adapted_injectivity)
   then show ?thesis
     by simp
 qed
