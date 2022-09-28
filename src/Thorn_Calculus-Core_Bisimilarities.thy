@@ -389,7 +389,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
             synchronous_transition.scope_opening
           )
       then show ?thesis
-        unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>\<eta> = Sending\<close> and \<open>n = Suc m\<close> and \<open>S = \<nu> a. \<Q> a\<close>
+        unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = \<nu> a. \<Q> a\<close> and \<open>\<eta> = Sending\<close> and \<open>n = Suc m\<close>
         by (intro exI conjI, use in assumption) simp
     next
       case (new_channel_io \<R>)
