@@ -527,7 +527,7 @@ proof -
     by
       (auto
         dest:
-          create_channel_power_is_compatible_with_synchronous_bisimilarity
+          synchronous.create_channel_power_is_compatible_with_bisimilarity
             [where n = "n - Suc (Suc i)"]
         simp only:
           funpow_add [symmetric, THEN fun_cong, unfolded comp_def]
@@ -1087,7 +1087,7 @@ next
       (blast intro:
         parallel_right_scope_extension
         synchronous.bisimilarity_symmetry_rule
-        create_channel_power_is_compatible_with_synchronous_bisimilarity
+        synchronous.create_channel_power_is_compatible_with_bisimilarity
       )
   also have "\<dots> \<sim>\<^sub>s Q \<parallel> \<star>\<^bsup>n\<^esup> (\<nu> a. \<Delta> T a)"
     using Suc.IH .
@@ -1415,8 +1415,8 @@ proof (induction xs arbitrary: \<Q>)
     unfolding general_parallel.simps(1)
     by
       (intro
-        parallel_is_right_compatible_with_synchronous_bisimilarity
-        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        synchronous.parallel_is_right_compatible_with_bisimilarity
+        synchronous.repeated_receive_is_quasi_compatible_with_bisimilarity
       )
       simp
 next
@@ -1435,7 +1435,7 @@ next
     also have "\<dots> = (\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (subst environment_dependent_parallel) (fact refl)
     also have "\<dots> \<sim>\<^sub>s ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> \<P> x \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
-      by (intro parallel_is_left_compatible_with_synchronous_bisimilarity parallel_commutativity)
+      by (intro synchronous.parallel_is_left_compatible_with_bisimilarity parallel_commutativity)
     also have "\<dots> \<sim>\<^sub>s (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e))"
       using parallel_associativity .
     also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n)) e)"
@@ -1453,20 +1453,20 @@ next
     (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
     by
       (intro
-        parallel_is_right_compatible_with_synchronous_bisimilarity
-        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        synchronous.parallel_is_right_compatible_with_bisimilarity
+        synchronous.repeated_receive_is_quasi_compatible_with_bisimilarity
       )
       simp
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
     using parallel_associativity .
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using Cons.IH
-    by (rule parallel_is_right_compatible_with_synchronous_bisimilarity)
+    by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
   also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using parallel_left_commutativity .
   also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
     using assms
-    by (rule parallel_is_right_compatible_with_synchronous_bisimilarity)
+    by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
   also have "\<dots> \<sim>\<^sub>s (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
     using thorn_simps
     by equivalence
