@@ -1352,19 +1352,19 @@ text \<open>
 
 context begin
 
-private lemma double_repeated_receive_post_left_receive:
+private lemma post_left_receive_from_repeated_receive:
   shows "
-    (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E>) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> \<E>
+    (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> Q \<guillemotleft> suffix n
     \<sim>\<^sub>s
-    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> \<E>"
+    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_associativity .
 
-private lemma double_repeated_receive_post_right_receive:
+private lemma post_right_receive_from_repeated_receive:
   shows "
-    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> (post_receive n X \<P> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> \<E>)
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<P> \<parallel> Q \<guillemotleft> suffix n)
     \<sim>\<^sub>s
-    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> \<E>"
+    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_left_commutativity .
 
@@ -1394,7 +1394,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
       using
-        double_repeated_receive_post_left_receive
+        post_left_receive_from_repeated_receive
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1420,7 +1420,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
       using
-        double_repeated_receive_post_right_receive
+        post_right_receive_from_repeated_receive
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1445,7 +1445,7 @@ next
     and
       \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
     using
-      double_repeated_receive_post_left_receive
+      post_left_receive_from_repeated_receive
     and
       composition_in_universe [
         OF
@@ -1516,9 +1516,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
       using
-        double_repeated_receive_post_left_receive
+        post_left_receive_from_repeated_receive
       and
-        double_repeated_receive_post_left_receive [symmetric]
+        post_left_receive_from_repeated_receive [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1589,9 +1589,9 @@ next
       and
         \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
       using
-        double_repeated_receive_post_left_receive
+        post_left_receive_from_repeated_receive
       and
-        double_repeated_receive_post_left_receive [symmetric]
+        post_left_receive_from_repeated_receive [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
