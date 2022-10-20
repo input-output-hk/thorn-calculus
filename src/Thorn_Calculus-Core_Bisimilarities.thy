@@ -1547,7 +1547,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>\<alpha> = IO \<eta> B' n X\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q\<close>
       and
-        \<open>\<eta> = Receiving\<close> and \<open>B' = B\<close>
+        \<open>\<eta> = Receiving\<close>
+      and
+        \<open>B' = B\<close>
       and
         \<open>Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))\<close>
       using
