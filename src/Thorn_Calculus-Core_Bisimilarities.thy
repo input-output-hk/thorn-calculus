@@ -1533,7 +1533,6 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     and
       "Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
       by (auto elim: transition_from_repeated_receive)
-    moreover
     have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
       using synchronous_transition.receiving
       by (subst repeated_receive_proper_def)
@@ -1542,7 +1541,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
       (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
       by (fact synchronous_transition.parallel_right_io)
-    ultimately show ?thesis
+    then show ?thesis
       unfolding
         post_receive_after_parallel
       and
@@ -1606,7 +1605,6 @@ next
     and
       "Q = post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
       by (auto elim: transition_from_repeated_receive)
-    moreover
     have "
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
       \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
@@ -1619,7 +1617,7 @@ next
       (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel>
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
       by (fact synchronous_transition.parallel_right_io)
-    ultimately show ?thesis
+    then show ?thesis
       unfolding
         post_receive_after_parallel
       and
