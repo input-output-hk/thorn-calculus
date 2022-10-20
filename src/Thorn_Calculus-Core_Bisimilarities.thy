@@ -1534,7 +1534,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       "Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
       by (auto elim: transition_from_repeated_receive)
     have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
-      using synchronous_transition.receiving
+      using receiving
       by (subst repeated_receive_proper_def)
     then have "
       A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y
@@ -1609,7 +1609,7 @@ next
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
       \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
       post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
-      using synchronous_transition.receiving
+      using receiving
       by (subst repeated_receive_proper_def)
     then have "
       A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
