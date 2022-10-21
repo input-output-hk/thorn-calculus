@@ -1473,16 +1473,14 @@ private lemma adapted_after_repeated_receive_nested_idempotency:
     (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n
     \<sim>\<^sub>s
     post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
-    (is "?T \<sim>\<^sub>s ?U")
+    (is "?S \<sim>\<^sub>s ?T")
 proof -
-  have "
-    ?T
-    \<sim>\<^sub>s
+  have "?S \<sim>\<^sub>s
     (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
     unfolding adapted_after_repeated_receive
     using repeated_receive_nested_idempotency and parallel_associativity
     by equivalence
-  also have "\<dots> \<sim>\<^sub>s ?U"
+  also have "\<dots> \<sim>\<^sub>s ?T"
     unfolding adapted_after_parallel
     using parallel_left_commutativity .
   finally show ?thesis .
