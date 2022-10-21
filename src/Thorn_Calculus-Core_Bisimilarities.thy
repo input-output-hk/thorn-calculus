@@ -1468,20 +1468,31 @@ proof -
 qed
 
 private lemma adapted_after_repeated_receive_nested_idempotency:
-  shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> P) \<parallel> Q \<guillemotleft> \<E> \<sim>\<^sub>s P \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> \<E>"
+  shows "
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q>) \<parallel>
+    (B \<triangleright>\<^sup>\<infinity> y. ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> \<Q> y)) \<guillemotleft> suffix n
+    \<sim>\<^sub>s
+    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (B \<triangleright>\<^sup>\<infinity> y. ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> \<Q> y))) \<guillemotleft> suffix n"
+    (is "?T \<sim>\<^sub>s ?U")
 proof -
-  have "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> P) \<parallel> Q \<guillemotleft> \<E> \<sim>\<^sub>s (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> \<parallel> P \<parallel> Q \<guillemotleft> \<E>"
+  have "
+    ?T
+    \<sim>\<^sub>s
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. ((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> \<Q> y)) \<guillemotleft> suffix n"
     unfolding adapted_after_repeated_receive
     using repeated_receive_nested_idempotency and parallel_associativity
     by equivalence
-  also have "\<dots> \<sim>\<^sub>s P \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> \<E>"
+  also have "\<dots> \<sim>\<^sub>s ?U"
     unfolding adapted_after_parallel
     using parallel_left_commutativity .
   finally show ?thesis .
 qed
 
 private lemma adapted_after_parallel_left_commutativity:
-  shows "P \<parallel> (Q \<parallel> R) \<guillemotleft> \<E> \<sim>\<^sub>s Q \<guillemotleft> \<E> \<parallel> P \<parallel> R \<guillemotleft> \<E>"
+  shows "
+    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n
+    \<sim>\<^sub>s
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_left_commutativity .
 
