@@ -1467,7 +1467,7 @@ proof -
   finally show ?thesis .
 qed
 
-private lemma adapted_after_repeated_receive_nested_idempotency:
+private lemma with_inner_repeated_receive_post_right_receive:
   shows "
     (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel>
     (((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q>) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n)
@@ -1486,7 +1486,7 @@ proof -
   finally show ?thesis .
 qed
 
-private lemma adapted_after_parallel_left_commutativity:
+private lemma without_inner_repeated_receive_post_right_receive:
   shows "
     (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n)
     \<sim>\<^sub>s
@@ -1562,9 +1562,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))\<close>
       using
-        adapted_after_repeated_receive_nested_idempotency
+        with_inner_repeated_receive_post_right_receive
       and
-        adapted_after_parallel_left_commutativity [symmetric]
+        without_inner_repeated_receive_post_right_receive [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1636,9 +1636,9 @@ next
       and
         \<open>\<eta> = Receiving\<close> and \<open>B' = B\<close> and \<open>Q = post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)\<close>
       using
-        adapted_after_repeated_receive_nested_idempotency
+        with_inner_repeated_receive_post_right_receive
       and
-        adapted_after_parallel_left_commutativity [symmetric]
+        without_inner_repeated_receive_post_right_receive [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
