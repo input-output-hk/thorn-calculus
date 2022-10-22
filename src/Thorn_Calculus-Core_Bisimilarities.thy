@@ -1488,9 +1488,9 @@ qed
 
 private lemma adapted_after_parallel_left_commutativity:
   shows "
-    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n)
     \<sim>\<^sub>s
-    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n)"
+    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_left_commutativity .
 
@@ -1564,7 +1564,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       using
         adapted_after_repeated_receive_nested_idempotency
       and
-        adapted_after_parallel_left_commutativity
+        adapted_after_parallel_left_commutativity [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1638,7 +1638,7 @@ next
       using
         adapted_after_repeated_receive_nested_idempotency
       and
-        adapted_after_parallel_left_commutativity
+        adapted_after_parallel_left_commutativity [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
