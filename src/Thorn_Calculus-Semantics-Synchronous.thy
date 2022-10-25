@@ -1747,7 +1747,7 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
   next
     case (parallel_left_io \<eta> A n X P')
     from \<open>P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> P'\<close> have "Q \<parallel> P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> Q \<guillemotleft> suffix n \<parallel> P'"
-      by (fact synchronous_transition.parallel_right_io)
+      by (fact parallel_right_io)
     then show ?thesis
       unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = P' \<parallel> Q \<guillemotleft> suffix n\<close>
       using equality_in_universe
@@ -1755,7 +1755,7 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
   next
     case (parallel_left_communication P')
     from \<open>P \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> P'\<close> have "Q \<parallel> P \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> Q \<parallel> P'"
-      by (fact synchronous_transition.parallel_right_communication)
+      by (fact parallel_right_communication)
     then show ?thesis
       unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = P' \<parallel> Q\<close>
       using equality_in_universe
@@ -1763,7 +1763,7 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
   next
     case (parallel_right_io \<eta> A n X Q')
     from \<open>Q \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> Q'\<close> have "Q \<parallel> P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> Q' \<parallel> P \<guillemotleft> suffix n"
-      by (fact synchronous_transition.parallel_left_io)
+      by (fact parallel_left_io)
     then show ?thesis
       unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = P \<guillemotleft> suffix n \<parallel> Q'\<close>
       using equality_in_universe
@@ -1771,7 +1771,7 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
   next
     case (parallel_right_communication Q')
     from \<open>Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> Q'\<close> have "Q \<parallel> P \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> Q' \<parallel> P"
-      by (fact synchronous_transition.parallel_left_communication)
+      by (fact parallel_left_communication)
     then show ?thesis
       unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = P \<parallel> Q'\<close>
       using equality_in_universe
