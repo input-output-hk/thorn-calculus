@@ -125,6 +125,16 @@ lemmas [induct_simp] =
   constant_family_chan_family_uncurry
   chan_family_distinctness
 
+lemma transition_from_repeated_receive:
+  assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
+  obtains n and X
+  where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X" and "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+  by
+    (
+      use assms in \<open>subst (asm) (2) repeated_receive_proper_def\<close>,
+      cases \<alpha> "A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" Q rule: synchronous_transition.cases
+    )
+
 lemma adapted_io_transition:
   assumes "S \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> T"
   shows "S \<guillemotleft> \<E> \<rightarrow>\<^sub>s\<lparr>IO \<eta> (A \<guillemotleft> \<E>) n (X \<guillemotleft> on_suffix n \<E>)\<rparr> T \<guillemotleft> on_suffix n \<E>"

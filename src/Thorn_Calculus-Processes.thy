@@ -360,7 +360,17 @@ lemma repeated_receive_proper_def:
 
 lemma adapted_after_repeated_receive:
   shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
-  sorry
+  by
+    (
+      standard,
+      subst (1 2) repeated_receive_proper_def,
+      coinduction rule: repeated_receive.coinduct
+    )
+    (
+      use adapted_after_receive adapted_after_parallel in simp,
+      subst (3 4) repeated_receive_proper_def,
+      auto intro: repeated_receive.cong_intros
+    )
 
 text \<open>
   We define guarding of processes at the host-language level.

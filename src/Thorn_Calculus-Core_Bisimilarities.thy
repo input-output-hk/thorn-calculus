@@ -1359,9 +1359,107 @@ text \<open>
   commutativity rules.
 *)
 
+context begin
+
+private lemma post_left_receive_from_repeated_receive:
+  shows "
+    (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> Q \<guillemotleft> suffix n
+    \<sim>\<^sub>s
+    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> suffix n"
+  unfolding adapted_after_parallel
+  using parallel_associativity .
+
+private lemma post_right_receive_from_repeated_receive:
+  shows "
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<P> \<parallel> Q \<guillemotleft> suffix n)
+    \<sim>\<^sub>s
+    post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<guillemotleft> suffix n"
+  unfolding adapted_after_parallel
+  using parallel_left_commutativity .
+
 lemma repeated_receive_idempotency [thorn_simps]:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x"
-  sorry
+proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M>"])
+  case (forward_simulation \<alpha> S)
+  then show ?case
+  proof cases
+    case (parallel_left_io \<eta> A' n X Q)
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "A' = A"
+    and
+      "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (auto elim: transition_from_repeated_receive)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>S = Q \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
+      and
+        \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+      using
+        post_left_receive_from_repeated_receive
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  next
+    case (parallel_right_io \<eta> A' n X Q)
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "A' = A"
+    and
+      "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (auto elim: transition_from_repeated_receive)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q\<close>
+      and
+        \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+      using
+        post_right_receive_from_repeated_receive
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  qed (blast elim: transition_from_repeated_receive)+
+next
+  case (backward_simulation \<alpha> S)
+  from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
+  obtain n and X where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X" and "S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+    by (erule transition_from_repeated_receive)
+  with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
+  have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+    by (simp only:)
+  then have "
+    A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x
+    \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+    post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+    by (fact parallel_left_io)
+  then show ?case
+    unfolding
+      post_receive_after_parallel
+    and
+      \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+    using
+      post_left_receive_from_repeated_receive
+    and
+      composition_in_universe
+        [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+    by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+qed respectful
 
 lemma repeated_receive_nested_idempotency [thorn_simps]:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q"
@@ -1375,9 +1473,186 @@ proof -
   finally show ?thesis .
 qed
 
+private lemma with_inner_repeated_receive_post_right_receive:
+  shows "
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel>
+    (((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q>) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n)
+    \<sim>\<^sub>s
+    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
+    (is "?S \<sim>\<^sub>s ?T")
+proof -
+  have "?S \<sim>\<^sub>s
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
+    unfolding adapted_after_repeated_receive
+    using repeated_receive_nested_idempotency and parallel_associativity
+    by equivalence
+  also have "\<dots> \<sim>\<^sub>s ?T"
+    unfolding adapted_after_parallel
+    using parallel_left_commutativity .
+  finally show ?thesis .
+qed
+
+private lemma without_inner_repeated_receive_post_right_receive:
+  shows "
+    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n)
+    \<sim>\<^sub>s
+    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
+  unfolding adapted_after_parallel
+  using parallel_left_commutativity .
+
 lemma inner_repeated_receive_redundancy:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y"
-  sorry
+proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M> \<frown> [\<sim>\<^sub>s]"])
+  case (forward_simulation \<alpha> S)
+  then show ?case
+  proof cases
+    case (parallel_left_io \<eta> A' n X Q)
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "A' = A"
+    and
+      "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (auto elim: transition_from_repeated_receive)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
+    then have "
+      A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y
+      \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
+      by (fact synchronous_transition.parallel_left_io)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>S = Q \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n\<close>
+      and
+        \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+      using
+        post_left_receive_from_repeated_receive
+      and
+        post_left_receive_from_repeated_receive [symmetric]
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  next
+    case (parallel_right_io \<eta> B' n X Q)
+    from \<open>B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<rightarrow>\<^sub>s\<lparr>IO \<eta> B' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "B' = B"
+    and
+      "Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
+      by (auto elim: transition_from_repeated_receive)
+    have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
+      using receiving
+      by (subst repeated_receive_proper_def)
+    then have "
+      A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
+      by (fact synchronous_transition.parallel_right_io)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> B' n X\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q\<close>
+      and
+        \<open>\<eta> = Receiving\<close>
+      and
+        \<open>B' = B\<close>
+      and
+        \<open>Q = post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))\<close>
+      using
+        with_inner_repeated_receive_post_right_receive
+      and
+        without_inner_repeated_receive_post_right_receive [symmetric]
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  qed (blast elim: transition_from_repeated_receive)+
+next
+  case (backward_simulation \<alpha> S)
+  then show ?case
+  proof cases
+    case (parallel_left_io \<eta> A' n X Q)
+    from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "A' = A"
+    and
+      "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (auto elim: transition_from_repeated_receive)
+    with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X\<rparr> Q\<close>
+    have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+      by (simp only:)
+    then have "
+      A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
+      \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
+      by (fact synchronous_transition.parallel_left_io)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> A' n X\<close> and \<open>S = Q \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n\<close>
+      and
+        \<open>\<eta> = Receiving\<close> and \<open>A' = A\<close> and \<open>Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)\<close>
+      using
+        post_left_receive_from_repeated_receive
+      and
+        post_left_receive_from_repeated_receive [symmetric]
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  next
+    case (parallel_right_io \<eta> B' n X Q)
+    from \<open>B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>IO \<eta> B' n X\<rparr> Q\<close>
+    have
+      "\<eta> = Receiving"
+    and
+      "B' = B"
+    and
+      "Q = post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
+      by (auto elim: transition_from_repeated_receive)
+    have "
+      B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
+      using receiving
+      by (subst repeated_receive_proper_def)
+    then have "
+      A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+      (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel>
+      post_receive n X (\<lambda>y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y))"
+      by (fact synchronous_transition.parallel_right_io)
+    then show ?thesis
+      unfolding
+        post_receive_after_parallel
+      and
+        \<open>\<alpha> = IO \<eta> B' n X\<close> and \<open>S = (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> Q\<close>
+      and
+        \<open>\<eta> = Receiving\<close> and \<open>B' = B\<close> and \<open>Q = post_receive n X (\<lambda>y. \<Q> y \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y)\<close>
+      using
+        with_inner_repeated_receive_post_right_receive
+      and
+        without_inner_repeated_receive_post_right_receive [symmetric]
+      and
+        composition_in_universe
+          [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
+      by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
+  qed (blast elim: transition_from_repeated_receive)+
+qed respectful
+
+end
 
 (*FIXME:
   Simplify the proof of the following lemma once #231 is resolved.
