@@ -7,81 +7,6 @@ imports
   "Thorn_Calculus-Processes"
 begin
 
-definition dependent_on_chan_at :: "nat \<Rightarrow> val family \<Rightarrow> bool" where
-  [simp]: "dependent_on_chan_at i X \<longleftrightarrow> (\<exists>a\<^sub>1 a\<^sub>2. \<Delta>\<^bsub>i\<^esub> X a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> X a\<^sub>2)"
-
-lemma dependent_on_chan_at_after_on_suffix_adapted:
-  assumes "i \<le> n"
-  shows "dependent_on_chan_at i (X \<guillemotleft> on_suffix (Suc n) \<E>) \<longleftrightarrow> dependent_on_chan_at i X"
-proof -
-  have "
-    \<Delta>\<^bsub>i\<^esub> (X \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> (X \<guillemotleft> on_suffix (Suc n) \<E>) a\<^sub>2
-    \<longleftrightarrow>
-    \<Delta>\<^bsub>i\<^esub> X a\<^sub>1 \<noteq> \<Delta>\<^bsub>i\<^esub> X a\<^sub>2"
-    (is "?v \<longleftrightarrow> ?w")
-    for a\<^sub>1 and a\<^sub>2
-  proof -
-    have "?v \<longleftrightarrow> \<Delta>\<^bsub>i\<^esub> X a\<^sub>1 \<guillemotleft> on_suffix n \<E> \<noteq> \<Delta>\<^bsub>i\<^esub> X a\<^sub>2 \<guillemotleft> on_suffix n \<E>"
-      using \<open>i \<le> n\<close>
-      by (simp only: deep_curry_after_on_suffix_adapted)
-    also have "\<dots> \<longleftrightarrow> ?w"
-      by (simp only: adapted_injectivity)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
-
-lemma dependent_on_chan_at_after_source_anchored_move_adapted:
-  shows "dependent_on_chan_at i (X \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at j X"
-proof -
-  have "\<Delta>\<^bsub>i\<^esub> (X \<guillemotleft> move i j) = \<Delta>\<^bsub>j\<^esub> X"
-  proof -
-    have "\<Delta>\<^bsub>i\<^esub> (X \<guillemotleft> move i j) = \<Delta>\<^bsub>i\<^esub> (\<nabla>\<^bsub>i\<^esub> (\<Delta>\<^bsub>j\<^esub> X))"
-      by transfer simp
-    also have "\<dots> = \<Delta>\<^bsub>j\<^esub> X"
-      by (simp only: deep_curry_after_deep_uncurry pointfree_idE)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
-
-lemma dependent_on_chan_at_after_move_within_prefix_adapted:
-  assumes "i < n" and "j < n"
-  shows "dependent_on_chan_at n (X \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at n X"
-proof -
-  have "
-    \<Delta>\<^bsub>n\<^esub> (X \<guillemotleft> move i j) a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> (X \<guillemotleft> move i j) a\<^sub>2 \<longleftrightarrow> \<Delta>\<^bsub>n\<^esub> X a\<^sub>1 \<noteq> \<Delta>\<^bsub>n\<^esub> X a\<^sub>2"
-    (is "?v \<longleftrightarrow> ?w")
-    for a\<^sub>1 and a\<^sub>2
-  proof -
-    have "?v \<longleftrightarrow> \<Delta>\<^bsub>n\<^esub> X a\<^sub>1 \<guillemotleft> move i j \<noteq> \<Delta>\<^bsub>n\<^esub> X a\<^sub>2 \<guillemotleft> move i j"
-      using \<open>i < n\<close> and \<open>j < n\<close>
-      by (simp only: deeper_curry_after_move_adapted)
-    also have "\<dots> \<longleftrightarrow> ?w"
-      by (simp only: adapted_injectivity)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
-
-lemma not_dependent_on_chan_at:
-  assumes "\<not> dependent_on_chan_at i X'"
-  obtains X where "X' = X \<guillemotleft> remove i"
-proof
-  have "X' = (\<lambda>e. X' (insert_at i (e !! i) (delete_at i e)))"
-    by (simp only: insert_at_after_delete_at)
-  also have "\<dots> = (\<lambda>e. X' (insert_at i undefined (delete_at i e)))"
-    using \<open>\<not> dependent_on_chan_at i X'\<close>
-    unfolding dependent_on_chan_at_def and deep_curry_def
-    by metis
-  also have "\<dots> = X' \<circ> insert_at i undefined \<guillemotleft> remove i" (is "_ = ?X'")
-    by transfer (simp only: comp_def)
-  finally show "X' = ?X'" .
-qed
-
 definition post_receive :: "nat \<Rightarrow> val family \<Rightarrow> (val \<Rightarrow> 'a family) \<Rightarrow> 'a family" where
   [simp]: "post_receive n X \<V> = (\<lambda>e. (\<V> (X e) \<guillemotleft> suffix n) e)"
 
@@ -136,6 +61,12 @@ lemma post_receive_after_new_channel:
   shows "post_receive n X (\<lambda>x. \<nu> a. \<P> x a) = \<nu> a. post_receive n X (\<lambda>x. \<P> x a)"
   unfolding post_receive_def and adapted_after_new_channel
   by (simp only: new_channel_def)
+
+definition
+  receive_continuation_lifting :: "process family relation \<Rightarrow> (val \<Rightarrow> process family) relation"
+  (\<open>_\<^sup>\<sharp>\<close> [1000] 1000)
+where
+  [simp]: "K\<^sup>\<sharp> = (\<lambda>\<P> \<Q>. \<forall>n X. K (post_receive n X \<P>) (post_receive n X \<Q>))"
 
 inductive
   synchronous_transition :: "action \<Rightarrow> process family relation"
@@ -1125,7 +1056,7 @@ lemma create_channel_mutation_power_def [simp]:
 definition adapted_mutation :: "adaptation \<Rightarrow> process family relation" (\<open>{\<hole> \<guillemotleft> _}\<close> [56]) where
   [simp]: "{\<hole> \<guillemotleft> \<E>} P S \<longleftrightarrow> S = P \<guillemotleft> \<E>"
 
-inductive_set universe :: "process family relation set" (\<open>\<U>\<close>) where
+inductive_set synchronous_universe :: "process family relation set" (\<open>\<U>\<close>) where
   parallel_mutation_in_universe:
     "{P \<parallel> \<hole>} \<in> \<U>" |
   create_channel_mutation_in_universe:
@@ -1248,7 +1179,7 @@ proof (unfold_locales, fold synchronous_shortcut_transition_def)
     using move_is_injective and on_suffix_is_injective
     by
       induction
-      (blast intro: universe.intros suffix_adapted_mutation_in_universe power_in_universe)+
+      (blast intro: synchronous_universe.intros suffix_adapted_mutation_in_universe power_in_universe)+
 next
   fix \<alpha>
   have "\<exists>\<omega> I'. I \<longrightarrow>\<^sub>s\<lparr>\<alpha> \<bar> \<omega>\<rparr> I' \<and> (\<exists> T'. T \<rightarrow>\<^sub>s\<^sup>?\<lparr>\<omega>\<rparr> T' \<and> I' T' S')"
@@ -1658,29 +1589,145 @@ next
     by fastforce
 qed
 
-(*FIXME:
-  Use a locale to prove the (quasi-)compatibility lemmas only once for \<^theory_text>\<open>synchronous\<close> and
-  \<^theory_text>\<open>synchronous.weak\<close> and then also for \<^theory_text>\<open>synchronous.mixed\<close>. Do only the setup for the solvers
-  explicitly for both \<^theory_text>\<open>synchronous\<close> and \<^theory_text>\<open>synchronous.weak\<close>.
-*)
+definition
+  receive_quasi_mutation :: "chan family \<Rightarrow> ((val \<Rightarrow> process family) \<Rightarrow> process family \<Rightarrow> bool)"
+  (\<open>{_ \<triangleright> \<partial>. \<hole> \<partial>}\<close> [53])
+where
+  [simp]: "{A \<triangleright> \<partial>. \<hole> \<partial>} \<P> S \<longleftrightarrow> S = A \<triangleright> x. \<P> x"
 
-lemma receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<sim>\<^sub>s post_receive n X \<Q>"
-  shows "A \<triangleright> x. \<P> x \<sim>\<^sub>s A \<triangleright> x. \<Q> x"
-using assms
-proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.symmetric_up_to_rule [where \<F> = "[\<sim>\<^sub>s]"])
-  case symmetry
-  then show ?case
-    by (blast intro: synchronous.bisimilarity_symmetry_rule)
-next
-  case simulation
-  from simulation(2,1) show ?case
-    by cases (auto simp del: receive_def intro: synchronous_transition.receiving)
-qed respectful
+definition
+  receive_lifting :: "process family relation \<Rightarrow> process family relation" (\<open>\<N>\<close>)
+where
+  [simp]: "\<N> = (\<lambda>K. \<Squnion>A. {A \<triangleright> \<partial>. \<hole> \<partial>}\<inverse>\<inverse> OO K\<^sup>\<sharp> OO {A \<triangleright> \<partial>. \<hole> \<partial>})"
+
+definition
+  mutant_and_receive_lifting :: "process family relation \<Rightarrow> process family relation" (\<open>\<L>\<close>)
+where
+  [simp]: "\<L> = \<M> \<squnion> \<N>"
+
+text \<open>
+  The following locale is called \<^theory_text>\<open>underlying_synchronous_mutation_system\<close>, because its
+  interpretations are mutation systems that underlie the transition systems that are interpretations
+  of the \<^theory_text>\<open>synchronous_transition_system\<close> locale introduced further below.
+\<close>
+
+locale underlying_synchronous_mutation_system =
+  mutation_system
+    \<open>synchronous_transition\<close>
+    \<open>simulating_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>simulating_shortcut_transition\<close>
+    \<open>\<U>\<close>
+    \<open>synchronous_mutation_transition_std\<close>
+  for
+    simulating_transition :: "action \<Rightarrow> process family relation" (\<open>'(\<rightharpoondown>\<lparr>_\<rparr>')\<close>)
+  and
+    synchronous_shortcut_transition :: "action option \<Rightarrow> process family relation"
+  and
+    simulating_shortcut_transition :: "action option \<Rightarrow> process family relation"
+  +
+  assumes simulating_receiving:
+    "A \<triangleright> x. \<P> x \<rightharpoondown>\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P>"
+begin
+
+notation unilateral_progression (infix \<open>\<hookrightarrow>\<close> 50)
+notation shortcut_progression (infix \<open>\<leadsto>\<close> 50)
+notation bisimilarity (infix \<open>\<sim>\<close> 50)
+
+context begin
+
+private lemma unilateral_original_or_receive_progression:
+  assumes "K \<le> L" and "K \<hookrightarrow> L"
+  shows "(id \<squnion> \<N>) K \<hookrightarrow> (id \<squnion> \<N>) L"
+proof -
+  have "\<exists>T. A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>\<alpha>\<rparr> T \<and> K S T"
+    if "K\<^sup>\<sharp> \<P> \<Q>" and "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S"
+    for \<alpha> and A and \<P> and \<Q> and S
+  using \<open>A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close> proof cases
+    case (receiving n X)
+    have "A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<Q>"
+      using simulating_receiving .
+    with \<open>K\<^sup>\<sharp> \<P> \<Q>\<close> show ?thesis
+      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X \<P>\<close>
+      by (intro exI conjI, use in assumption) (simp only: receive_continuation_lifting_def)
+  qed
+  then have "(\<Squnion>A. {A \<triangleright> \<partial>. \<hole> \<partial>}\<inverse>\<inverse> OO K\<^sup>\<sharp> OO {A \<triangleright> \<partial>. \<hole> \<partial>})\<inverse>\<inverse> OO (\<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr>) \<le> (\<rightharpoondown>\<lparr>\<alpha>\<rparr>) OO K\<inverse>\<inverse>" for \<alpha>
+    by fastforce
+  then have "\<N> K \<hookrightarrow> K"
+    by simp
+  with \<open>K \<le> L\<close> have "\<N> K \<hookrightarrow> L"
+    by blast
+  with \<open>K \<hookrightarrow> L\<close> have "(id \<squnion> \<N>) K \<hookrightarrow> L"
+    by (simp, blast)
+  then show ?thesis
+    by (simp, blast)
+qed
+
+lemma mutant_and_receive_lifting_is_respectful [respectful]:
+  shows "respectful \<L>"
+proof -
+  have "(id \<squnion> \<N>) K \<leadsto> (id \<squnion> \<N>) L" (is "?\<O> K \<leadsto> ?\<O> L") if "K \<leadsto> L" for K and L
+  proof -
+    from \<open>K \<leadsto> L\<close> have "K \<le> L" and "K\<inverse>\<inverse> \<le> L\<inverse>\<inverse>" and "K \<hookrightarrow> L" and "K\<inverse>\<inverse> \<hookrightarrow> L\<inverse>\<inverse>"
+      by simp_all
+    from \<open>K \<le> L\<close> have "?\<O> K \<le> ?\<O> L"
+      by fastforce
+    moreover
+    from \<open>K \<le> L\<close> and \<open>K \<hookrightarrow> L\<close> have "?\<O> K \<hookrightarrow> ?\<O> L"
+      by (fact unilateral_original_or_receive_progression)
+    moreover
+    from \<open>K\<inverse>\<inverse> \<le> L\<inverse>\<inverse>\<close> and \<open>K\<inverse>\<inverse> \<hookrightarrow> L\<inverse>\<inverse>\<close> have "?\<O> K\<inverse>\<inverse> \<hookrightarrow> ?\<O> L\<inverse>\<inverse>"
+      by (fact unilateral_original_or_receive_progression)
+    moreover
+    have "?\<O> M\<inverse>\<inverse> = (?\<O> M)\<inverse>\<inverse>" for M
+      by fastforce
+    ultimately show ?thesis
+      unfolding shortcut_progression_def and bilateral_progression_def
+      by (metis (lifting) inf2I)
+  qed
+  then have "respectful (id \<squnion> \<N>)"
+    by simp
+  then have "respectful (\<M> \<squnion> id \<squnion> \<N>)"
+    using mutant_lifting_is_respectful and union_is_respectful
+    by (simp only: sup_assoc)
+  moreover have "id \<le> \<M>"
+    using equality_in_universe
+    by (force intro: le_funI)
+  ultimately have "respectful (\<M> \<squnion> \<N>)"
+    by (simp only: sup_absorb1)
+  then show ?thesis
+    unfolding mutant_and_receive_lifting_def .
+qed
+
+end
+
+lemma underlying_mutant_and_receive_lifted_bisimilarity_in_bisimilarity:
+  shows "\<L> (\<sim>) \<le> (\<sim>)"
+  using
+    respectfully_transformed_bisimilarity_in_bisimilarity
+      [OF mutant_and_receive_lifting_is_respectful] .
+
+end
+
+interpretation synchronous:
+  underlying_synchronous_mutation_system
+    \<open>synchronous_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+  using receiving
+  by unfold_locales
+
+interpretation synchronous.mixed:
+  underlying_synchronous_mutation_system
+    \<open>synchronous.weak_transition\<close>
+    \<open>synchronous_shortcut_transition\<close>
+    \<open>synchronous.weak_shortcut_transition\<close>
+  using receiving
+  by unfold_locales fastforce
 
 text \<open>
   We prove commutativity of parallel composition already here, since we need it to prove
-  compatibility of parallel composition for both bisimilarity and weak bisimilarity.
+  compatibility of parallel composition.
 \<close>
 
 lemma parallel_commutativity:
@@ -1732,110 +1779,31 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
   qed
 qed (respectful, blast)
 
-lemma parallel_is_right_compatible_with_synchronous_bisimilarity:
-  assumes "Q\<^sub>1 \<sim>\<^sub>s Q\<^sub>2"
-  shows "P \<parallel> Q\<^sub>1 \<sim>\<^sub>s P \<parallel> Q\<^sub>2"
-  using
-    synchronous.mutation_is_compatible_with_bisimilarity [OF parallel_mutation_in_universe]
-  and
-    assms
+locale synchronous_transition_system =
+  transition_system \<open>transition\<close>
+  for transition :: "action \<Rightarrow> process family relation" +
+  assumes synchronous_bisimilarity_in_bisimilarity:
+    "(\<sim>\<^sub>s) \<le> (\<sim>)"
+  assumes mutant_and_receive_lifted_bisimilarity_in_bisimilarity:
+    "\<L> (\<sim>) \<le> (\<sim>)"
+begin
+
+lemma mutant_lifted_bisimilarity_in_bisimilarity:
+  shows "\<M> (\<sim>) \<le> (\<sim>)"
+  using mutant_and_receive_lifted_bisimilarity_in_bisimilarity
   by simp
-
-lemma parallel_is_left_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2"
-  shows "P\<^sub>1 \<parallel> Q \<sim>\<^sub>s P\<^sub>2 \<parallel> Q"
-  using
-    parallel_is_right_compatible_with_synchronous_bisimilarity and parallel_commutativity
-  and
-    assms
-  by (meson synchronous.bisimilarity_transitivity_rule)
-
-lemma parallel_is_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2" and "Q\<^sub>1 \<sim>\<^sub>s Q\<^sub>2"
-  shows "P\<^sub>1 \<parallel> Q\<^sub>1 \<sim>\<^sub>s P\<^sub>2 \<parallel> Q\<^sub>2"
-  using
-    parallel_is_right_compatible_with_synchronous_bisimilarity
-  and
-    parallel_is_left_compatible_with_synchronous_bisimilarity
-  and
-    assms
-  by (meson synchronous.bisimilarity_transitivity_rule)
-
-lemma repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<sim>\<^sub>s post_receive n X \<Q>"
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
-  sorry
-
-lemma general_parallel_is_compatible_with_synchronous_bisimilarity:
-  assumes "\<And>v. \<P>\<^sub>1 v \<sim>\<^sub>s \<P>\<^sub>2 v"
-  shows "\<Prod>v \<leftarrow> vs. \<P>\<^sub>1 v \<sim>\<^sub>s \<Prod>v \<leftarrow> vs. \<P>\<^sub>2 v"
-  using parallel_is_compatible_with_synchronous_bisimilarity and assms
-  by (induction vs) simp_all
-
-lemma create_channel_is_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2"
-  shows "\<star> P\<^sub>1 \<sim>\<^sub>s \<star> P\<^sub>2"
-  using
-    synchronous.mutation_is_compatible_with_bisimilarity [OF create_channel_mutation_in_universe]
-  and
-    assms
-  by simp
-
-lemma tagged_create_channel_is_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2"
-  shows "\<langle>t\<rangle> \<star> P\<^sub>1 \<sim>\<^sub>s \<langle>t\<rangle> \<star> P\<^sub>2"
-  using create_channel_is_compatible_with_synchronous_bisimilarity and assms
-  by simp
-
-lemma create_channel_power_is_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2"
-  shows "\<star>\<^bsup>n\<^esup> P\<^sub>1 \<sim>\<^sub>s \<star>\<^bsup>n\<^esup> P\<^sub>2"
-  using
-    synchronous.mutation_is_compatible_with_bisimilarity
-      [OF power_in_universe [OF create_channel_mutation_in_universe]]
-  and
-    assms
-  by simp
-
-lemma wrapped_remove_adapted_is_compatible_with_synchronous_bisimilarity:
-  assumes "P\<^sub>1 \<sim>\<^sub>s P\<^sub>2"
-  shows "wrapped_remove_adapted P\<^sub>1 i \<sim>\<^sub>s wrapped_remove_adapted P\<^sub>2 i"
-  using
-    synchronous.mutation_is_compatible_with_bisimilarity [OF remove_adapted_mutation_in_universe]
-  and
-    assms
-  by simp
-
-declare synchronous.bisimilarity_is_equivalence [equivalence]
-
-lemma [compatibility]:
-  shows "P \<parallel> Q \<sim>\<^sub>s canonical (\<sim>\<^sub>s) P \<parallel> canonical (\<sim>\<^sub>s) Q"
-  using parallel_is_compatible_with_synchronous_bisimilarity
-  sorry
-
-lemma [compatibility]:
-  shows "\<Prod>v \<leftarrow> vs. \<P> v \<sim>\<^sub>s \<Prod>v \<leftarrow> vs. canonical (\<sim>\<^sub>s) (\<P> v)"
-  using general_parallel_is_compatible_with_synchronous_bisimilarity
-  sorry
-
-lemma [compatibility]:
-  shows "\<star> P \<sim>\<^sub>s \<star> (canonical (\<sim>\<^sub>s) P)"
-  using create_channel_is_compatible_with_synchronous_bisimilarity
-  sorry
-
-lemma [compatibility]:
-  shows "\<langle>t\<rangle> \<star> P \<sim>\<^sub>s \<langle>t\<rangle> \<star> (canonical (\<sim>\<^sub>s) P)"
-  using tagged_create_channel_is_compatible_with_synchronous_bisimilarity
-  sorry
-
-lemma [compatibility]:
-  shows "wrapped_remove_adapted P i \<sim>\<^sub>s wrapped_remove_adapted (canonical (\<sim>\<^sub>s) P) i"
-  using wrapped_remove_adapted_is_compatible_with_synchronous_bisimilarity
-  sorry
 
 text \<open>
-  Now for weak bisimilarity.
+  The following lemma is analogous to the one of the same name in \<^locale>\<open>mutation_system\<close>.
 \<close>
+
+lemma synchronous_mutation_is_compatible_with_bisimilarity:
+  assumes "I \<in> \<U>" and "I S\<^sub>1 T\<^sub>1" and "I S\<^sub>2 T\<^sub>2" and "S\<^sub>1 \<sim> S\<^sub>2"
+  shows "T\<^sub>1 \<sim> T\<^sub>2"
+  using mutant_lifted_bisimilarity_in_bisimilarity and assms
+  by auto
+
+declare bisimilarity_is_equivalence [equivalence]
 
 (*FIXME:
   Make the following changes above and below:
@@ -1847,130 +1815,129 @@ text \<open>
       \<^theory_text>\<open>lift_definition\<close> proofs
 *)
 
-lemma receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<approx>\<^sub>s post_receive n X \<Q>"
-  shows "A \<triangleright> x. \<P> x \<approx>\<^sub>s A \<triangleright> x. \<Q> x"
-using assms unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
-proof (coinduction arbitrary: \<P> \<Q> rule: synchronous.mixed.symmetric_up_to_rule [where \<F> = "[\<asymp>\<^sub>s]"])
-  case symmetry
-  then show ?case
-    by (blast intro: synchronous.mixed.bisimilarity_symmetry_rule)
-next
-  case simulation
-  from simulation(2,1) show ?case
-    by cases (fastforce simp del: receive_def intro: synchronous_transition.receiving)
-qed respectful
+lemma receive_is_quasi_compatible_with_bisimilarity:
+  assumes "(\<sim>)\<^sup>\<sharp> \<P> \<Q>"
+  shows "A \<triangleright> x. \<P> x \<sim> A \<triangleright> x. \<Q> x"
+  using mutant_and_receive_lifted_bisimilarity_in_bisimilarity and assms
+  unfolding mutant_and_receive_lifting_def and receive_lifting_def and receive_quasi_mutation_def
+  by (auto simp only: sup_apply)
 
-lemma parallel_is_right_compatible_with_synchronous_weak_bisimilarity:
-  assumes "Q\<^sub>1 \<approx>\<^sub>s Q\<^sub>2"
-  shows "P \<parallel> Q\<^sub>1 \<approx>\<^sub>s P \<parallel> Q\<^sub>2"
+lemma parallel_is_right_compatible_with_bisimilarity:
+  assumes "Q\<^sub>1 \<sim> Q\<^sub>2"
+  shows "P \<parallel> Q\<^sub>1 \<sim> P \<parallel> Q\<^sub>2"
   using
-    synchronous.mixed.mutation_is_compatible_with_bisimilarity [OF parallel_mutation_in_universe]
+    synchronous_mutation_is_compatible_with_bisimilarity [OF parallel_mutation_in_universe]
   and
     assms
-  unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
   by simp
 
-lemma parallel_is_left_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2"
-  shows "P\<^sub>1 \<parallel> Q \<approx>\<^sub>s P\<^sub>2 \<parallel> Q"
+lemma parallel_is_left_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2"
+  shows "P\<^sub>1 \<parallel> Q \<sim> P\<^sub>2 \<parallel> Q"
   using
-    parallel_is_right_compatible_with_synchronous_weak_bisimilarity and parallel_commutativity
+    parallel_is_right_compatible_with_bisimilarity and parallel_commutativity
   and
     assms
   by
     (meson
-      synchronous.bisimilarity_in_weak_bisimilarity [THEN predicate2D]
-      synchronous.weak.bisimilarity_transitivity_rule
+      synchronous_bisimilarity_in_bisimilarity [THEN predicate2D]
+      bisimilarity_transitivity_rule
     )
 
-lemma parallel_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2" and "Q\<^sub>1 \<approx>\<^sub>s Q\<^sub>2"
-  shows "P\<^sub>1 \<parallel> Q\<^sub>1 \<approx>\<^sub>s P\<^sub>2 \<parallel> Q\<^sub>2"
+lemma parallel_is_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2" and "Q\<^sub>1 \<sim> Q\<^sub>2"
+  shows "P\<^sub>1 \<parallel> Q\<^sub>1 \<sim> P\<^sub>2 \<parallel> Q\<^sub>2"
   using
-    parallel_is_right_compatible_with_synchronous_weak_bisimilarity
-  and
-    parallel_is_left_compatible_with_synchronous_weak_bisimilarity
+    parallel_is_right_compatible_with_bisimilarity and parallel_is_left_compatible_with_bisimilarity
   and
     assms
-  by (meson synchronous.weak.bisimilarity_transitivity_rule)
+  by (meson bisimilarity_transitivity_rule)
 
-lemma repeated_receive_is_quasi_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>n X. post_receive n X \<P> \<approx>\<^sub>s post_receive n X \<Q>"
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<approx>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
+lemma repeated_receive_is_quasi_compatible_with_bisimilarity:
+  assumes "(\<sim>)\<^sup>\<sharp> \<P> \<Q>"
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim> A \<triangleright>\<^sup>\<infinity> x. \<Q> x"
   sorry
 
-lemma general_parallel_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "\<And>v. \<P>\<^sub>1 v \<approx>\<^sub>s \<P>\<^sub>2 v"
-  shows "\<Prod>v \<leftarrow> vs. \<P>\<^sub>1 v \<approx>\<^sub>s \<Prod>v \<leftarrow> vs. \<P>\<^sub>2 v"
-  using parallel_is_compatible_with_synchronous_weak_bisimilarity and assms
+lemma general_parallel_is_compatible_with_bisimilarity:
+  assumes "\<And>v. \<P>\<^sub>1 v \<sim> \<P>\<^sub>2 v"
+  shows "\<Prod>v \<leftarrow> vs. \<P>\<^sub>1 v \<sim> \<Prod>v \<leftarrow> vs. \<P>\<^sub>2 v"
+  using parallel_is_compatible_with_bisimilarity and assms
   by (induction vs) simp_all
 
-lemma create_channel_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2"
-  shows "\<star> P\<^sub>1 \<approx>\<^sub>s \<star> P\<^sub>2"
+lemma create_channel_is_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2"
+  shows "\<star> P\<^sub>1 \<sim> \<star> P\<^sub>2"
   using
-    synchronous.mixed.mutation_is_compatible_with_bisimilarity
-      [OF create_channel_mutation_in_universe]
+    synchronous_mutation_is_compatible_with_bisimilarity [OF create_channel_mutation_in_universe]
   and
     assms
-  unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
   by simp
 
-lemma tagged_create_channel_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2"
-  shows "\<langle>t\<rangle> \<star> P\<^sub>1 \<approx>\<^sub>s \<langle>t\<rangle> \<star> P\<^sub>2"
-  using create_channel_is_compatible_with_synchronous_weak_bisimilarity and assms
-  by simp
+lemma tagged_create_channel_is_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2"
+  shows "\<langle>t\<rangle> \<star> P\<^sub>1 \<sim> \<langle>t\<rangle> \<star> P\<^sub>2"
+  using create_channel_is_compatible_with_bisimilarity and assms
+  unfolding tagged_create_channel_def .
 
-lemma create_channel_power_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2"
-  shows "\<star>\<^bsup>n\<^esup> P\<^sub>1 \<approx>\<^sub>s \<star>\<^bsup>n\<^esup> P\<^sub>2"
+lemma create_channel_power_is_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2"
+  shows "\<star>\<^bsup>n\<^esup> P\<^sub>1 \<sim> \<star>\<^bsup>n\<^esup> P\<^sub>2"
   using
-    synchronous.mixed.mutation_is_compatible_with_bisimilarity
+    synchronous_mutation_is_compatible_with_bisimilarity
       [OF power_in_universe [OF create_channel_mutation_in_universe]]
   and
     assms
-  unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
   by simp
 
-lemma wrapped_remove_adapted_is_compatible_with_synchronous_weak_bisimilarity:
-  assumes "P\<^sub>1 \<approx>\<^sub>s P\<^sub>2"
-  shows "wrapped_remove_adapted P\<^sub>1 i \<approx>\<^sub>s wrapped_remove_adapted P\<^sub>2 i"
+lemma wrapped_remove_adapted_is_compatible_with_bisimilarity:
+  assumes "P\<^sub>1 \<sim> P\<^sub>2"
+  shows "wrapped_remove_adapted P\<^sub>1 i \<sim> wrapped_remove_adapted P\<^sub>2 i"
   using
-    synchronous.mixed.mutation_is_compatible_with_bisimilarity
-      [OF remove_adapted_mutation_in_universe]
+    synchronous_mutation_is_compatible_with_bisimilarity [OF remove_adapted_mutation_in_universe]
   and
     assms
-  unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity
   by simp
 
-declare synchronous.weak.bisimilarity_is_equivalence [equivalence]
-
-lemma [compatibility]:
-  shows "P \<parallel> Q \<approx>\<^sub>s canonical (\<approx>\<^sub>s) P \<parallel> canonical (\<approx>\<^sub>s) Q"
-  using parallel_is_compatible_with_synchronous_weak_bisimilarity
+lemma parallel_compatibility_rule [compatibility]:
+  shows "P \<parallel> Q \<sim> canonical (\<sim>) P \<parallel> canonical (\<sim>) Q"
+  using parallel_is_compatible_with_bisimilarity
   sorry
 
-lemma [compatibility]:
-  shows "\<Prod>v \<leftarrow> vs. \<P> v \<approx>\<^sub>s \<Prod>v \<leftarrow> vs. canonical (\<approx>\<^sub>s) (\<P> v)"
-  using general_parallel_is_compatible_with_synchronous_weak_bisimilarity
+lemma general_parallel_compatibility_rule [compatibility]:
+  shows "\<Prod>v \<leftarrow> vs. \<P> v \<sim> \<Prod>v \<leftarrow> vs. canonical (\<sim>) (\<P> v)"
+  using general_parallel_is_compatible_with_bisimilarity
   sorry
 
-lemma [compatibility]:
-  shows "\<star> P \<approx>\<^sub>s \<star> (canonical (\<approx>\<^sub>s) P)"
-  using create_channel_is_compatible_with_synchronous_weak_bisimilarity
+lemma create_channel_compatibility_rule [compatibility]:
+  shows "\<star> P \<sim> \<star> (canonical (\<sim>) P)"
+  using create_channel_is_compatible_with_bisimilarity
   sorry
 
-lemma [compatibility]:
-  shows "\<langle>t\<rangle> \<star> P \<approx>\<^sub>s \<langle>t\<rangle> \<star> (canonical (\<approx>\<^sub>s) P)"
-  using tagged_create_channel_is_compatible_with_synchronous_weak_bisimilarity
+lemma tagged_create_channel_compatibility_rule [compatibility]:
+  shows "\<langle>t\<rangle> \<star> P \<sim> \<langle>t\<rangle> \<star> (canonical (\<sim>) P)"
+  using tagged_create_channel_is_compatible_with_bisimilarity
   sorry
 
-lemma [compatibility]:
-  shows "wrapped_remove_adapted P i \<approx>\<^sub>s wrapped_remove_adapted (canonical (\<approx>\<^sub>s) P) i"
-  using wrapped_remove_adapted_is_compatible_with_synchronous_weak_bisimilarity
+lemma wrapped_remove_adapted_compatibility_rule [compatibility]:
+  shows "wrapped_remove_adapted P i \<sim> wrapped_remove_adapted (canonical (\<sim>) P) i"
+  using wrapped_remove_adapted_is_compatible_with_bisimilarity
   sorry
+
+end
+
+interpretation synchronous:
+  synchronous_transition_system \<open>synchronous_transition\<close>
+  using order_refl and synchronous.underlying_mutant_and_receive_lifted_bisimilarity_in_bisimilarity
+  by unfold_locales
+
+interpretation synchronous.weak:
+  synchronous_transition_system \<open>synchronous.weak_transition\<close>
+  using
+    synchronous.bisimilarity_in_weak_bisimilarity
+  and
+    synchronous.mixed.underlying_mutant_and_receive_lifted_bisimilarity_in_bisimilarity
+  unfolding synchronous.weak_bisimilarity_is_mixed_bisimilarity [symmetric]
+  by unfold_locales
 
 text \<open>
   Setup of automatic conversion from bisimilarities into weak bisimilarities.

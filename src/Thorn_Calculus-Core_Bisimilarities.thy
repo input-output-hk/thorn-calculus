@@ -389,7 +389,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
             synchronous_transition.scope_opening
           )
       then show ?thesis
-        unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>\<eta> = Sending\<close> and \<open>n = Suc m\<close> and \<open>S = \<nu> a. \<Q> a\<close>
+        unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = \<nu> a. \<Q> a\<close> and \<open>\<eta> = Sending\<close> and \<open>n = Suc m\<close>
         by (intro exI conjI, use in assumption) simp
     next
       case (new_channel_io \<R>)
@@ -527,7 +527,7 @@ proof -
     by
       (auto
         dest:
-          create_channel_power_is_compatible_with_synchronous_bisimilarity
+          synchronous.create_channel_power_is_compatible_with_bisimilarity
             [where n = "n - Suc (Suc i)"]
         simp only:
           funpow_add [symmetric, THEN fun_cong, unfolded comp_def]
@@ -671,9 +671,8 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
       qed
       ultimately show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = \<star>\<^bsup>n\<^esup> (R \<parallel> Q')\<close> and \<open>R = \<nu> a. \<P>' a\<close>
-        by
-          (intro exI conjI, use in assumption)
-          (force intro: power_in_universe [OF create_channel_mutation_in_universe])
+        using power_in_universe [OF create_channel_mutation_in_universe]
+        by (intro exI conjI, use in assumption) force
     qed
   next
     case (parallel_left_io \<eta> A n X R)
@@ -707,7 +706,8 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
         by (fact synchronous_transition.new_channel_io)
       then show ?thesis
         unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = R \<parallel> Q \<guillemotleft> suffix n\<close> and \<open>R = \<nu> a. \<P>' a\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     qed
   next
     case (parallel_left_communication R)
@@ -723,7 +723,8 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
         by (fact synchronous_transition.new_channel_communication)
       then show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = R \<parallel> Q\<close> and \<open>R = \<nu> a. \<P>' a\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     qed
   next
     case (parallel_right_io \<eta> A n X Q')
@@ -746,7 +747,8 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
         \<open>\<alpha> = IO \<eta> A n X\<close>
       and
         \<open>S = (\<nu> a. \<P> a) \<guillemotleft> suffix n \<parallel> Q'\<close> [unfolded adapted_after_new_channel]
-      by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+      using equality_in_universe
+      by (intro exI conjI, use in assumption) force
   next
     case (parallel_right_communication Q')
     from \<open>Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> Q'\<close> have "Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> Q' \<guillemotleft> tail"
@@ -760,7 +762,8 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
       by (fact new_channel_communication)
     then show ?thesis
       unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = \<nu> a. \<P> a \<parallel> Q'\<close>
-      by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+      using equality_in_universe
+      by (intro exI conjI, use in assumption) force
   qed
 next
   case (backward_simulation \<alpha> S \<P> Q)
@@ -844,7 +847,8 @@ next
         by (fact synchronous_transition.parallel_left_io)
       then show ?thesis
         unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<R> = (\<lambda>a. \<Delta>\<^bsub>n\<^esub> P' a \<parallel> Q \<guillemotleft> suffix n)\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     next
       case (parallel_right_io U)
       have "\<R> = (\<lambda>a. \<P> a \<guillemotleft> suffix n \<parallel> \<Delta>\<^bsub>n\<^esub> U a)"
@@ -882,7 +886,8 @@ next
           adapted_after_new_channel
         and
           \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<R> = (\<lambda>a. \<P> a \<guillemotleft> suffix n \<parallel> Q')\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     qed
   next
     case (new_channel_communication \<R>)
@@ -947,10 +952,11 @@ next
               new_channel_as_create_channel and comp_def
             and
               \<open>\<alpha> = \<tau>\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<nabla> \<R> = \<star>\<^bsup>n\<^esup> (P' \<parallel> U)\<close> and \<open>U = Q' \<guillemotleft> remove n\<close>
-            using independent_value_adjustment [where n = n and P' = P' and Q' = Q']
-            by
-              (intro exI conjI, use in assumption)
-              (force intro: power_in_universe [OF create_channel_mutation_in_universe])
+            using
+              independent_value_adjustment [where n = n and P' = P' and Q' = Q']
+            and
+              power_in_universe [OF create_channel_mutation_in_universe]
+            by (intro exI conjI, use in assumption) force
         qed
       next
         case Receiving
@@ -982,10 +988,11 @@ next
             new_channel_as_create_channel and comp_def
           and
             \<open>\<alpha> = \<tau>\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<nabla> \<R> = \<star>\<^bsup>n\<^esup> (P' \<parallel> U)\<close> and \<open>U = Q' \<guillemotleft> remove n\<close>
-          using independent_value_adjustment [where n = n and P' = P' and Q' = Q']
-          by
-            (intro exI conjI, use in assumption)
-            (force intro: power_in_universe [OF create_channel_mutation_in_universe])
+          using
+            independent_value_adjustment [where n = n and P' = P' and Q' = Q']
+          and
+            power_in_universe [OF create_channel_mutation_in_universe]
+          by (intro exI conjI, use in assumption) force
       qed
     next
       case (parallel_left_communication P')
@@ -1007,7 +1014,8 @@ next
         by (fact synchronous_transition.parallel_left_communication)
       then show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<R> = (\<lambda>a. \<Delta> P' a \<parallel> Q)\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     next
       case (parallel_right_communication U)
       have "\<R> = (\<lambda>a. \<P> a \<parallel> \<Delta> U a)"
@@ -1030,7 +1038,8 @@ next
         by (fact synchronous_transition.parallel_right_communication)
       then show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = \<nu> a. \<R> a\<close> and \<open>\<R> = (\<lambda>a. \<P> a \<parallel> Q')\<close>
-        by (intro exI conjI, use in assumption) (force intro: equality_in_universe)
+        using equality_in_universe
+        by (intro exI conjI, use in assumption) force
     qed
   qed
 qed respectful
@@ -1078,7 +1087,7 @@ next
       (blast intro:
         parallel_right_scope_extension
         synchronous.bisimilarity_symmetry_rule
-        create_channel_power_is_compatible_with_synchronous_bisimilarity
+        synchronous.create_channel_power_is_compatible_with_bisimilarity
       )
   also have "\<dots> \<sim>\<^sub>s Q \<parallel> \<star>\<^bsup>n\<^esup> (\<nu> a. \<Delta> T a)"
     using Suc.IH .
@@ -1116,9 +1125,9 @@ proof (coinduction arbitrary: P Q R rule: synchronous.symmetric_up_to_rule [wher
       then show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = \<star>\<^bsup>n\<^esup> (P' \<parallel> U)\<close> and \<open>U = Q \<guillemotleft> suffix n \<parallel> R'\<close>
         using
-          power_in_universe [OF create_channel_mutation_in_universe]
-        and
           communication_with_rightmost_adjustment
+        and
+          power_in_universe [OF create_channel_mutation_in_universe]
         by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
     qed
   next
@@ -1178,9 +1187,9 @@ proof (coinduction arbitrary: P Q R rule: synchronous.symmetric_up_to_rule [wher
       then show ?thesis
         unfolding \<open>\<alpha> = \<tau>\<close> and \<open>S = P \<parallel> U\<close> and \<open>U = \<star>\<^bsup>n\<^esup> (Q' \<parallel> R')\<close>
         using
-          power_in_universe [OF create_channel_mutation_in_universe]
-        and
           communication_with_rightmost_adjustment [THEN synchronous.bisimilarity_symmetry_rule]
+        and
+          power_in_universe [OF create_channel_mutation_in_universe]
         by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
     next
       case (parallel_left_communication Q')
@@ -1681,9 +1690,10 @@ proof (induction xs arbitrary: \<Q>)
     unfolding general_parallel.simps(1)
     by
       (intro
-        parallel_is_right_compatible_with_synchronous_bisimilarity
-        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        synchronous.parallel_is_right_compatible_with_bisimilarity
+        synchronous.repeated_receive_is_quasi_compatible_with_bisimilarity
       )
+      simp
 next
   case (Cons x xs \<Q>)
   have "
@@ -1700,7 +1710,7 @@ next
     also have "\<dots> = (\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (subst environment_dependent_parallel) (fact refl)
     also have "\<dots> \<sim>\<^sub>s ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> \<P> x \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
-      by (intro parallel_is_left_compatible_with_synchronous_bisimilarity parallel_commutativity)
+      by (intro synchronous.parallel_is_left_compatible_with_bisimilarity parallel_commutativity)
     also have "\<dots> \<sim>\<^sub>s (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e))"
       using parallel_associativity .
     also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n)) e)"
@@ -1718,19 +1728,20 @@ next
     (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
     by
       (intro
-        parallel_is_right_compatible_with_synchronous_bisimilarity
-        repeated_receive_is_quasi_compatible_with_synchronous_bisimilarity
+        synchronous.parallel_is_right_compatible_with_bisimilarity
+        synchronous.repeated_receive_is_quasi_compatible_with_bisimilarity
       )
+      simp
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
     using parallel_associativity .
   also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using Cons.IH
-    by (rule parallel_is_right_compatible_with_synchronous_bisimilarity)
+    by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
   also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using parallel_left_commutativity .
   also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
     using assms
-    by (rule parallel_is_right_compatible_with_synchronous_bisimilarity)
+    by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
   also have "\<dots> \<sim>\<^sub>s (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
     using thorn_simps
     by equivalence
