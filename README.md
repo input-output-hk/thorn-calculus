@@ -7,8 +7,8 @@ Overview
 Requirements
 ============
 
-You need Isabelle2021-1 to use this Isabelle library. You can obtain
-Isabelle2021-1 from the [Isabelle website][isabelle].
+You need Isabelle2022 to use this Isabelle library. You can obtain
+Isabelle2022 from the [Isabelle website][isabelle].
 
 [isabelle]:
     https://isabelle.in.tum.de/
