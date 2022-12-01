@@ -1777,7 +1777,7 @@ proof (coinduction arbitrary: P Q rule: synchronous.symmetric_up_to_rule [where 
       using equality_in_universe
       by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
   qed
-qed (respectful, blast)
+qed (respectful, iprover)
 
 locale synchronous_transition_system =
   transition_system \<open>transition\<close>

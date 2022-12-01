@@ -1211,7 +1211,7 @@ proof (coinduction arbitrary: P Q R rule: synchronous.symmetric_up_to_rule [wher
         by (intro exI conjI, use in assumption) (fastforce intro: rev_bexI)
     qed
   qed
-qed (respectful, blast)
+qed (respectful, iprover)
 
 end
 
