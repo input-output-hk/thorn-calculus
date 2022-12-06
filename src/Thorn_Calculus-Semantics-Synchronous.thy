@@ -145,6 +145,11 @@ proof -
     by force
 qed
 
+lemma repeated_receive_transition:
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+  using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
+  by (subst repeated_receive_proper_def) force
+
 lemma adapted_io_transition:
   assumes "S \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> T"
   shows "S \<guillemotleft> \<E> \<rightarrow>\<^sub>s\<lparr>IO \<eta> (A \<guillemotleft> \<E>) n (X \<guillemotleft> on_suffix n \<E>)\<rparr> T \<guillemotleft> on_suffix n \<E>"
