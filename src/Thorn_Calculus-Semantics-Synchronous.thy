@@ -130,6 +130,11 @@ lemmas [induct_simp] =
   constant_family_chan_family_uncurry
   chan_family_distinctness
 
+lemma repeated_receive_transition:
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+  using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
+  by (subst repeated_receive_proper_def) force
+
 lemma transition_from_repeated_receive:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
   obtains n and X where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X" and "Q = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
@@ -144,11 +149,6 @@ proof -
     unfolding post_receive_after_parallel
     by force
 qed
-
-lemma repeated_receive_transition:
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
-  using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
-  by (subst repeated_receive_proper_def) force
 
 lemma adapted_io_transition:
   assumes "S \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> T"
