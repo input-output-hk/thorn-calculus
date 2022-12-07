@@ -133,7 +133,7 @@ lemmas [induct_simp] =
 lemma repeated_receive_transition:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
   using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
-  by (subst repeated_receive_proper_def) force
+  by (subst repeated_receive_proper_def) (unfold post_receive_def)
 
 lemma transition_from_repeated_receive:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
