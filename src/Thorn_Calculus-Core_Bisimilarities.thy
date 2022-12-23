@@ -1361,13 +1361,13 @@ text \<open>
 
 context begin
 
-private lemma post_left_receive_from_repeated_receive:
-  shows "(T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> U \<guillemotleft> suffix n \<sim>\<^sub>s T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> U) \<guillemotleft> suffix n"
+private lemma left_amended_double_suffix_adapted:
+  shows "(R \<parallel> P \<guillemotleft> suffix n) \<parallel> Q \<guillemotleft> suffix n \<sim>\<^sub>s R \<parallel> (P \<parallel> Q) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_associativity .
 
-private lemma post_right_receive_from_repeated_receive:
-  shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (T \<parallel> U \<guillemotleft> suffix n) \<sim>\<^sub>s T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> U) \<guillemotleft> suffix n"
+private lemma right_amended_double_suffix_adapted:
+  shows "P \<guillemotleft> suffix n \<parallel> (R \<parallel> Q \<guillemotleft> suffix n) \<sim>\<^sub>s R \<parallel> (P \<parallel> Q) \<guillemotleft> suffix n"
   unfolding adapted_after_parallel
   using parallel_left_commutativity .
 
@@ -1389,7 +1389,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>Q = T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
       using
-        post_left_receive_from_repeated_receive
+        left_amended_double_suffix_adapted
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1407,7 +1407,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>Q = T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
       using
-        post_right_receive_from_repeated_receive
+        right_amended_double_suffix_adapted
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1430,7 +1430,7 @@ next
     unfolding
       \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
     using
-      post_left_receive_from_repeated_receive
+      left_amended_double_suffix_adapted
     and
       composition_in_universe
         [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1499,9 +1499,9 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       and
         \<open>R = T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
       using
-        post_left_receive_from_repeated_receive
+        left_amended_double_suffix_adapted
       and
-        post_left_receive_from_repeated_receive [symmetric]
+        left_amended_double_suffix_adapted [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1564,9 +1564,9 @@ next
       and
         \<open>R = T \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
       using
-        post_left_receive_from_repeated_receive
+        left_amended_double_suffix_adapted
       and
-        post_left_receive_from_repeated_receive [symmetric]
+        left_amended_double_suffix_adapted [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
