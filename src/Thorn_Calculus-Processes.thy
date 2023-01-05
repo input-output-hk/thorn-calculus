@@ -436,6 +436,10 @@ lemma adapted_after_general_parallel:
 
 (* FIXME: Check if we should also have a \<^theory_text>\<open>general_parallel_and_adapted\<close>. *)
 
+lemma family_uncurry_after_general_parallel:
+  shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
+  by (induction vs) (simp_all, metis)
+
 lemma environment_dependent_general_parallel:
   shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
 proof (induction vs)
