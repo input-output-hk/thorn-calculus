@@ -372,6 +372,20 @@ lemma adapted_after_repeated_receive:
       auto intro: repeated_receive.cong_intros
     )
 
+lemma family_uncurry_after_repeated_receive:
+  shows "\<nabla> (\<lambda>b. \<A> b \<triangleright>\<^sup>\<infinity> x. \<P> x b) = \<nabla> \<A> \<triangleright>\<^sup>\<infinity> x. \<nabla> (\<P> x)"
+  by
+    (
+      standard,
+      subst (1 2) repeated_receive_proper_def,
+      coinduction rule: repeated_receive.coinduct
+    )
+    (
+      use family_uncurry_after_receive family_uncurry_after_parallel in simp,
+      subst (3 4) repeated_receive_proper_def,
+      auto intro: repeated_receive.cong_intros
+    )
+
 text \<open>
   We define guarding of processes at the host-language level.
 \<close>
