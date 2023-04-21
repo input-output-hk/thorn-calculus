@@ -135,7 +135,7 @@ lemma adapted_undo:
   by transfer (simp add: comp_assoc surj_iff)
 
 text \<open>
-  The following is not just a pre-simplification rules but a very important law, used as a
+  The following is not just a pre-simplification rule but a very important law, used as a
   simplification rule in several places. See above for the arguments in favor of surjectivity.
 \<close>
 
