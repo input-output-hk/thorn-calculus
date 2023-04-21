@@ -992,27 +992,14 @@ lemma chan_family_distinctness:
   fixes A :: "chan family"
   shows "shd \<noteq> A \<guillemotleft> tail" and "A \<guillemotleft> tail \<noteq> shd"
 proof -
-  obtain a :: chan and b :: chan where "a \<noteq> b"
+  obtain b where "b \<noteq> A undefined"
     using more_than_one_chan
-    by blast
-  then show "shd \<noteq> A \<guillemotleft> tail"
-  proof (cases "A undefined = a")
-    case True
-    with \<open>a \<noteq> b\<close> have "shd (b ## undefined) \<noteq> (A \<guillemotleft> tail) (b ## undefined)"
-      unfolding tail_def
-      by transfer simp
-    then show ?thesis
-      by auto
-  next
-    case False
-    then have "shd (a ## undefined) \<noteq> (A \<guillemotleft> tail) (a ## undefined)"
-      unfolding tail_def
-      by transfer simp
-    then show ?thesis
-      by auto
-  qed
-  then show "A \<guillemotleft> tail \<noteq> shd"
-    by simp
+    by metis
+  then have "shd (b ## undefined) \<noteq> (A \<guillemotleft> tail) (b ## undefined)"
+    unfolding tail_def
+    by transfer fastforce
+  then show "shd \<noteq> A \<guillemotleft> tail" and "A \<guillemotleft> tail \<noteq> shd"
+    by auto
 qed
 
 end
