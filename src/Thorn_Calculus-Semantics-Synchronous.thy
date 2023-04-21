@@ -132,6 +132,37 @@ lemmas [induct_simp] =
   constant_family_chan_family_uncurry
   chan_family_distinctness
 
+lemma no_mobility_scope_opening:
+  assumes "dependent_on_chan_at 0 X" and "\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>0\<^esup> X\<rparr> Q"
+  shows "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>1\<^esup> X\<rparr> Q"
+  using scope_opening [where n = 0] and assms
+  by (metis le_zero_eq identity_as_move identity_adapted One_nat_def)
+
+lemma no_mobility_communication:
+  assumes "\<eta> \<noteq> \<mu>" and "P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> P'" and "Q \<rightarrow>\<^sub>s\<lparr>IO \<mu> A 0 X\<rparr> Q'"
+  shows "P \<parallel> Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> P' \<parallel> Q'"
+  using communication [where n = 0] and assms
+  unfolding funpow_0 .
+
+lemma no_mobility_parallel_left_io:
+  assumes "P \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> P'"
+  shows "P \<parallel> Q \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> P' \<parallel> Q"
+  using parallel_left_io [where n = 0] and assms
+  by transfer simp
+
+lemma no_mobility_parallel_right_io:
+  assumes "Q \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> Q'"
+  shows "P \<parallel> Q \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> P \<parallel> Q'"
+  using parallel_right_io [where n = 0] and assms
+  by transfer simp
+
+lemma no_mobility_new_channel_io:
+  assumes "\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> (A \<guillemotleft> tail) 0 (X \<guillemotleft> tail)\<rparr> \<nabla> \<Q>"
+  shows "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>IO \<eta> A 0 X\<rparr> \<nu> a. \<Q> a"
+  using new_channel_io [where n = 0] and assms
+  unfolding tail_def and family_uncurry_as_deep_uncurry
+  by transfer (simp add: delete_at_def [abs_def] del: sdrop.simps(2))
+
 lemma repeated_receive_transition:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
   using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
@@ -1406,7 +1437,7 @@ next
         by (simp add: \<open>S' = S' \<guillemotleft> on_suffix n \<D> \<guillemotleft> on_suffix n \<E>\<close> [symmetric])
       ultimately show ?thesis
         unfolding \<open>\<alpha> = IO \<eta> A n X\<close>
-        by 
+        by
           (
             subst \<open>A = A \<guillemotleft> \<D> \<guillemotleft> \<E>\<close>,
             subst \<open>X = X \<guillemotleft> on_suffix n \<D> \<guillemotleft> on_suffix n \<E>\<close>,
