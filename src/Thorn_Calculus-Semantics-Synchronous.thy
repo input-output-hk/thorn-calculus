@@ -124,6 +124,8 @@ lemmas [induct_simp] =
   family_uncurry_after_receive
   family_uncurry_after_parallel
   family_uncurry_after_new_channel
+  family_uncurry_after_repeated_receive
+  family_uncurry_after_general_parallel
 
 lemmas [induct_simp] =
   constant_function_family_uncurry
