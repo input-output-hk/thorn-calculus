@@ -438,7 +438,9 @@ lemma adapted_after_general_parallel:
 
 lemma family_uncurry_after_general_parallel:
   shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
-  by (induction vs) (simp_all, metis)
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
 
 lemma environment_dependent_general_parallel:
   shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
