@@ -1404,7 +1404,7 @@ next
         by (simp add: \<open>S' = S' \<guillemotleft> on_suffix n \<D> \<guillemotleft> on_suffix n \<E>\<close> [symmetric])
       ultimately show ?thesis
         unfolding \<open>\<alpha> = IO \<eta> A n X\<close>
-        by 
+        by
           (
             subst \<open>A = A \<guillemotleft> \<D> \<guillemotleft> \<E>\<close>,
             subst \<open>X = X \<guillemotleft> on_suffix n \<D> \<guillemotleft> on_suffix n \<E>\<close>,
