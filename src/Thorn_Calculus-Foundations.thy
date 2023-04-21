@@ -135,7 +135,7 @@ lemma adapted_undo:
   by transfer (simp add: comp_assoc surj_iff)
 
 text \<open>
-  The following is not just a pre-simplification rules but a very important law, used as a
+  The following is not just a pre-simplification rule but a very important law, used as a
   simplification rule in several places. See above for the arguments in favor of surjectivity.
 \<close>
 
@@ -182,7 +182,7 @@ proof -
   then have "surj (inv \<lfloor>\<E>\<rfloor>)" and "inv \<lfloor>\<E>\<rfloor> \<circ> \<lfloor>\<E>\<rfloor> = id" and "\<lfloor>\<E>\<rfloor> \<circ> inv \<lfloor>\<E>\<rfloor> = id"
     by (fact bijection.surj_inv, fact bijection.inv_comp_left, fact bijection.inv_comp_right)
   with that show ?thesis
-    by transfer simp 
+    by transfer simp
 qed
 
 lemma identity_is_injective:
@@ -269,7 +269,7 @@ proof -
       by (simp only: assms)
     also have "\<dots> = W \<circ> (\<lambda>e. replicate n undefined @- e) \<guillemotleft> \<E>"
       by transfer (simp add: comp_def stake_shift sdrop_shift)
-    finally show ?thesis.
+    finally show ?thesis .
   qed
   moreover
   have "W = W \<circ> (\<lambda>e. replicate n undefined @- e) \<guillemotleft> suffix n"
@@ -280,7 +280,7 @@ proof -
       W \<circ> (\<lambda>e. replicate n undefined @- e) \<guillemotleft> \<E> \<guillemotleft> suffix n"
       by transfer (simp_all add: comp_def sdrop_shift)
     also have "\<dots> = W \<guillemotleft> on_suffix n \<E>"
-      using assms unfolding V'_definition . 
+      using assms unfolding V'_definition .
     finally show ?thesis
       by simp
   qed
