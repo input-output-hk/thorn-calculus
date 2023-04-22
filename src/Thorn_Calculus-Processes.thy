@@ -356,7 +356,7 @@ print_translation \<open>
 
 lemma repeated_receive_proper_def:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  by (rule ext) (subst repeated_receive.code, simp)
+  by (rule HOL.ext) (subst repeated_receive.code, simp)
 
 lemma adapted_after_repeated_receive:
   shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
