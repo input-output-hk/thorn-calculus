@@ -20,6 +20,9 @@ codatatype process =
 corec RepeatedReceive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process" where
   "RepeatedReceive a P = Receive a (\<lambda>x. Parallel (P x) (RepeatedReceive a P))"
 
+definition Guard :: "bool \<Rightarrow> process \<Rightarrow> process" where
+  [simp]: "Guard v p = (if v then p else Stop)"
+
 definition
   stop :: "process family"
 where
@@ -44,13 +47,10 @@ definition
   repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
 where
   [simp]: "repeated_receive A \<P> = (\<lambda>e. RepeatedReceive (A e) (\<lambda>x. \<P> x e))"
-
-text \<open>
-  We define guarding of processes at the host-language level.
-\<close>
-
-definition guard :: "bool \<Rightarrow> process family \<Rightarrow> process family" where
-  [simp]: "guard v P = (if v then P else stop)"
+definition
+  guard :: "bool \<Rightarrow> process family \<Rightarrow> process family"
+where
+  [simp]: "guard v P = (\<lambda>e. Guard v (P e))"
 
 text \<open>
   We define parallel composition over a list of processes families.
