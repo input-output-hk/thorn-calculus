@@ -18,11 +18,11 @@ codatatype process =
   NewChannel \<open>chan \<Rightarrow> process\<close>
 
 definition
-  stop :: "process family" (\<open>\<zero>\<close>)
+  stop :: "process family"
 where
   [simp]: "stop = (\<lambda>_. Stop)"
 definition
-  send :: "chan family \<Rightarrow> val family \<Rightarrow> process family" (infix \<open>\<triangleleft>\<close> 52)
+  send :: "chan family \<Rightarrow> val family \<Rightarrow> process family"
 where
   [simp]: "send A X = (\<lambda>e. Send (A e) (X e))"
 definition
@@ -30,13 +30,38 @@ definition
 where
   [simp]: "receive A \<P> = (\<lambda>e. Receive (A e) (\<lambda>x. \<P> x e))"
 definition
-  parallel :: "process family \<Rightarrow> process family \<Rightarrow> process family" (infixr \<open>\<parallel>\<close> 51)
+  parallel :: "process family \<Rightarrow> process family \<Rightarrow> process family"
 where
   [simp]: "parallel P Q = (\<lambda>e. Parallel (P e) (Q e))"
 definition
-  new_channel :: "(chan \<Rightarrow> process family) \<Rightarrow> process family" (binder \<open>\<nu> \<close> 52)
+  new_channel :: "(chan \<Rightarrow> process family) \<Rightarrow> process family"
 where
   [simp]: "new_channel \<P> = (\<lambda>e. NewChannel (\<lambda>a. \<P> a e))"
+
+corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
+  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
+
+text \<open>
+  We define guarding of processes at the host-language level.
+\<close>
+
+definition guard :: "bool \<Rightarrow> process family \<Rightarrow> process family" where
+  [simp]: "guard v P = (if v then P else stop)"
+
+text \<open>
+  We define parallel composition over a list of processes families.
+\<close>
+
+primrec general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family" where
+  "general_parallel _ [] = stop" |
+  "general_parallel \<P> (v # vs) = parallel (\<P> v) (general_parallel \<P> vs)"
+
+text \<open>
+  We cannot put the \<^theory_text>\<open>translations\<close> and \<^theory_text>\<open>print_translation\<close> specifications into a bundle. However,
+  we need to put a corresponding \<^theory_text>\<open>syntax\<close> declaration before them. Therefore, we declare the
+  syntax, then specify the translations, and finally remove the syntax declaration, which can
+  ultimately be reintroduced by opening the bundle.
+\<close>
 
 text \<open>
   The notation for \<^const>\<open>receive\<close> cannot be declared with @{theory_text \<open>binder\<close>}, for the
@@ -58,11 +83,10 @@ translations
 print_translation \<open>
   [preserve_binder_abs_receive_tr' @{const_syntax receive} @{syntax_const "_receive"}]
 \<close>
+no_syntax
+  "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
 
-(* FIXME: Mention that \<open>\<circ>\<close> binds stronger than all the above operators and binders. *)
-
-corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
-  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
 syntax
   "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
@@ -71,25 +95,9 @@ translations
 print_translation \<open>
   [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
 \<close>
-
-lemma repeated_receive_proper_def:
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  by (rule HOL.ext) (subst repeated_receive.code, simp)
-
-text \<open>
-  We define guarding of processes at the host-language level.
-\<close>
-
-definition guard :: "bool \<Rightarrow> process family \<Rightarrow> process family" (infixr \<open>?\<close> 52) where
-  [simp]: "v ? P = (if v then P else \<zero>)"
-
-text \<open>
-  We define parallel composition over a list of processes families.
-\<close>
-
-primrec general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family" where
-  "general_parallel _ [] = \<zero>" |
-  "general_parallel \<P> (v # vs) = \<P> v \<parallel> general_parallel \<P> vs"
+no_syntax
+  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 
 text \<open>
   We define a notation for repeated parallel composition combined with mapping. Since this notation
@@ -98,6 +106,7 @@ text \<open>
 
 no_syntax
   "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
+
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
 translations
@@ -109,6 +118,42 @@ print_translation \<open>
       @{syntax_const "_general_parallel"}
   ]
 \<close>
+no_syntax
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+
+bundle process_family_syntax
+begin
+
+notation stop (\<open>\<zero>\<close>)
+
+notation send (infix \<open>\<triangleleft>\<close> 52)
+
+syntax
+  "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+
+notation parallel (infixr \<open>\<parallel>\<close> 51)
+
+notation new_channel (binder \<open>\<nu> \<close> 52)
+
+syntax
+  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+
+notation guard (infixr \<open>?\<close> 52)
+
+syntax
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+
+end
+
+(* FIXME: Mention that \<open>\<circ>\<close> binds stronger than all the above operators and binders. *)
+
+unbundle process_family_syntax
+
+lemma repeated_receive_proper_def:
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+  by (rule HOL.ext) (subst repeated_receive.code, simp)
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
   [simp]: "\<star> = new_channel \<circ> \<Delta>"
