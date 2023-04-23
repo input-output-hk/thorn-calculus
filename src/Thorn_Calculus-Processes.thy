@@ -61,6 +61,87 @@ print_translation \<open>
 
 (* FIXME: Mention that \<open>\<circ>\<close> binds stronger than all the above operators and binders. *)
 
+corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
+  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
+syntax
+  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "A \<triangleright>\<^sup>\<infinity> x. P" \<rightleftharpoons> "CONST repeated_receive A (\<lambda>x. P)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
+\<close>
+
+lemma repeated_receive_proper_def:
+  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
+  by (rule HOL.ext) (subst repeated_receive.code, simp)
+
+text \<open>
+  We define guarding of processes at the host-language level.
+\<close>
+
+definition guard :: "bool \<Rightarrow> process family \<Rightarrow> process family" (infixr \<open>?\<close> 52) where
+  [simp]: "v ? P = (if v then P else \<zero>)"
+
+text \<open>
+  We define parallel composition over a list of processes families.
+\<close>
+
+primrec general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family" where
+  "general_parallel _ [] = \<zero>" |
+  "general_parallel \<P> (v # vs) = \<P> v \<parallel> general_parallel \<P> vs"
+
+text \<open>
+  We define a notation for repeated parallel composition combined with mapping. Since this notation
+  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
+\<close>
+
+no_syntax
+  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
+syntax
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+translations
+  "\<Prod>v\<leftarrow>vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
+print_translation \<open>
+  [
+    preserve_binder_abs_general_parallel_tr'
+      @{const_syntax general_parallel}
+      @{syntax_const "_general_parallel"}
+  ]
+\<close>
+
+definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
+  [simp]: "\<star> = new_channel \<circ> \<Delta>"
+
+lemma new_channel_as_create_channel:
+  shows "new_channel = \<star> \<circ> \<nabla>"
+  by auto
+
+(*FIXME: Consider permitting tags of arbitrary types that have a total order. *)
+
+definition tagged_new_channel :: "nat \<Rightarrow> (chan \<Rightarrow> process family) \<Rightarrow> process family" where
+  [simp]: "tagged_new_channel _ \<P> = \<nu> a. \<P> a"
+
+syntax
+  "_tagged_new_channel" :: "[nat, pttrn, process family] \<Rightarrow> process family"
+  (\<open>(3\<langle>_\<rangle> \<nu> _./ _)\<close> [0, 0, 52] 52)
+translations
+  "\<langle>t\<rangle> \<nu> a. P" \<rightleftharpoons> "CONST tagged_new_channel t (\<lambda>a. P)"
+print_translation \<open>
+  [
+    preserve_binder_abs_receive_tr'
+      @{const_syntax tagged_new_channel}
+      @{syntax_const "_tagged_new_channel"}
+  ]
+\<close>
+
+definition tagged_create_channel :: "nat \<Rightarrow> process family \<Rightarrow> process family" (\<open>\<langle>_\<rangle> \<star>\<close>) where
+  [simp]: "\<langle>_\<rangle> \<star> = \<star>"
+
+(*FIXME:
+  \<^theory_text>\<open>tagged_create_channel\<close> should be retired once \<^theory_text>\<open>process_family_equivalence\<close> has been removed.
+*)
+
 lemma process_family_distinctnesses [induct_simp]:
   shows
     "\<zero> \<noteq> A \<triangleleft> X"
@@ -121,13 +202,6 @@ lemma process_family_injectivities [induct_simp]:
     "\<nu> a. \<Q>\<^sub>1 a = \<nu> a. \<Q>\<^sub>2 a \<longleftrightarrow> \<Q>\<^sub>1 = \<Q>\<^sub>2"
   by (auto dest: fun_cong)
 
-definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
-  [simp]: "\<star> = new_channel \<circ> \<Delta>"
-
-lemma new_channel_as_create_channel:
-  shows "new_channel = \<star> \<circ> \<nabla>"
-  by auto
-
 text \<open>
   The following trivially provable lemmas are stated, because they are later used as
   pre-simplification rules.
@@ -152,6 +226,26 @@ lemma family_uncurry_after_parallel:
 lemma family_uncurry_after_new_channel:
   shows "\<nabla> (\<lambda>a. \<nu> b. \<P> a b) = \<nu> b. \<nabla> (\<lambda>a. \<P> a b)"
   by simp
+
+lemma family_uncurry_after_repeated_receive:
+  shows "\<nabla> (\<lambda>b. \<A> b \<triangleright>\<^sup>\<infinity> x. \<P> x b) = \<nabla> \<A> \<triangleright>\<^sup>\<infinity> x. \<nabla> (\<P> x)"
+  by
+    (
+      standard,
+      subst (1 2) repeated_receive_proper_def,
+      coinduction rule: repeated_receive.coinduct
+    )
+    (
+      use family_uncurry_after_receive family_uncurry_after_parallel in simp,
+      subst (3 4) repeated_receive_proper_def,
+      auto intro: repeated_receive.cong_intros
+    )
+
+lemma family_uncurry_after_general_parallel:
+  shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
 
 text \<open>
   The following trivially provable lemmas are stated, because two of them are used by the
@@ -189,6 +283,30 @@ lemma adapted_after_parallel:
 lemma adapted_after_new_channel:
   shows "(\<nu> a. \<Q> a) \<guillemotleft> \<E> = \<nu> a. \<Q> a \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
+
+lemma adapted_after_repeated_receive:
+  shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
+  by
+    (
+      standard,
+      subst (1 2) repeated_receive_proper_def,
+      coinduction rule: repeated_receive.coinduct
+    )
+    (
+      use adapted_after_receive adapted_after_parallel in simp,
+      subst (3 4) repeated_receive_proper_def,
+      auto intro: repeated_receive.cong_intros
+    )
+
+lemma adapted_after_guard:
+  shows "(v ? P) \<guillemotleft> \<E> = v ? P \<guillemotleft> \<E>"
+  by transfer (simp add: comp_def)
+
+lemma adapted_after_general_parallel:
+  shows "(\<Prod>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Prod>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps adapted_after_stop adapted_after_parallel)
 
 lemma adapted_after_create_channel:
   shows "\<star> P \<guillemotleft> \<E> = \<star> (P \<guillemotleft> on_tail \<E>)"
@@ -308,6 +426,10 @@ proof -
     by simp
 qed
 
+(* FIXME: Check if we should also have a \<^theory_text>\<open>guard_and_adapted\<close>. *)
+
+(* FIXME: Check if we should also have a \<^theory_text>\<open>general_parallel_and_adapted\<close>. *)
+
 (*FIXME:
   The following lemmas and all the other \<^theory_text>\<open>environment_dependent\<close> lemmas seem to be used only in the
   manual rewriting under \<open>\<triangleright>\<^sup>\<infinity>\<close> and thus should be removed once the new implementation of
@@ -336,111 +458,7 @@ lemma environment_dependent_parallel:
   Perhaps we should add \<^theory_text>\<open>environment_dependent_new_channel\<close>, if only for completeness.
 *)
 
-(*FIXME:
-  Perhaps add \<^theory_text>\<open>environment_dependent\<close> lemmas also for higher-level constructs like the ones from
-  \<^theory_text>\<open>Thorn_Calculus-Communication\<close>.
-*)
-
-subsection \<open>Repeated Receiving\<close>
-
-corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
-  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
-syntax
-  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-translations
-  "A \<triangleright>\<^sup>\<infinity> x. P" \<rightleftharpoons> "CONST repeated_receive A (\<lambda>x. P)"
-print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
-\<close>
-
-lemma repeated_receive_proper_def:
-  shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  by (rule HOL.ext) (subst repeated_receive.code, simp)
-
-lemma adapted_after_repeated_receive:
-  shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
-  by
-    (
-      standard,
-      subst (1 2) repeated_receive_proper_def,
-      coinduction rule: repeated_receive.coinduct
-    )
-    (
-      use adapted_after_receive adapted_after_parallel in simp,
-      subst (3 4) repeated_receive_proper_def,
-      auto intro: repeated_receive.cong_intros
-    )
-
-lemma family_uncurry_after_repeated_receive:
-  shows "\<nabla> (\<lambda>b. \<A> b \<triangleright>\<^sup>\<infinity> x. \<P> x b) = \<nabla> \<A> \<triangleright>\<^sup>\<infinity> x. \<nabla> (\<P> x)"
-  by
-    (
-      standard,
-      subst (1 2) repeated_receive_proper_def,
-      coinduction rule: repeated_receive.coinduct
-    )
-    (
-      use family_uncurry_after_receive family_uncurry_after_parallel in simp,
-      subst (3 4) repeated_receive_proper_def,
-      auto intro: repeated_receive.cong_intros
-    )
-
-text \<open>
-  We define guarding of processes at the host-language level.
-\<close>
-
-definition guard :: "bool \<Rightarrow> process family \<Rightarrow> process family" (infixr \<open>?\<close> 52) where
-  [simp]: "v ? P = (if v then P else \<zero>)"
-
 (*FIXME: Perhaps add \<^theory_text>\<open>environment_dependent_guard\<close>.*)
-
-lemma adapted_after_guard:
-  shows "(v ? P) \<guillemotleft> \<E> = v ? P \<guillemotleft> \<E>"
-  by transfer (simp add: comp_def)
-
-(* FIXME: Check if we should also have a \<^theory_text>\<open>guard_and_adapted\<close>. *)
-
-text \<open>
-  We define parallel composition over a list of processes families.
-\<close>
-
-primrec general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family" where
-  "general_parallel _ [] = \<zero>" |
-  "general_parallel \<P> (v # vs) = \<P> v \<parallel> general_parallel \<P> vs"
-
-text \<open>
-  We define a notation for repeated parallel composition combined with mapping. Since this notation
-  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
-\<close>
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
-syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
-translations
-  "\<Prod>v\<leftarrow>vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
-print_translation \<open>
-  [
-    preserve_binder_abs_general_parallel_tr'
-      @{const_syntax general_parallel}
-      @{syntax_const "_general_parallel"}
-  ]
-\<close>
-
-lemma adapted_after_general_parallel:
-  shows "(\<Prod>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Prod>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
-  by
-    (induction vs)
-    (simp_all only: general_parallel.simps adapted_after_stop adapted_after_parallel)
-
-(* FIXME: Check if we should also have a \<^theory_text>\<open>general_parallel_and_adapted\<close>. *)
-
-lemma family_uncurry_after_general_parallel:
-  shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
-  by
-    (induction vs)
-    (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
 
 lemma environment_dependent_general_parallel:
   shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
@@ -455,30 +473,14 @@ next
     by (subst environment_dependent_parallel, simp only:)
 qed
 
+(*FIXME:
+  Perhaps add \<^theory_text>\<open>environment_dependent\<close> lemmas also for higher-level constructs like the ones from
+  \<^theory_text>\<open>Thorn_Calculus-Communication\<close>.
+*)
+
 lemma general_parallel_conversion_deferral:
   shows "\<Prod>w \<leftarrow> map f vs. \<P> w = \<Prod>v \<leftarrow> vs. \<P> (f v)"
   by (induction vs) simp_all
-
-(*FIXME: Consider permitting tags of arbitrary types that have a total order. *)
-
-definition tagged_new_channel :: "nat \<Rightarrow> (chan \<Rightarrow> process family) \<Rightarrow> process family" where
-  [simp]: "tagged_new_channel _ \<P> = \<nu> a. \<P> a"
-
-syntax
-  "_tagged_new_channel" :: "[nat, pttrn, process family] \<Rightarrow> process family"
-  (\<open>(3\<langle>_\<rangle> \<nu> _./ _)\<close> [0, 0, 52] 52)
-translations
-  "\<langle>t\<rangle> \<nu> a. P" \<rightleftharpoons> "CONST tagged_new_channel t (\<lambda>a. P)"
-print_translation \<open>
-  [
-    preserve_binder_abs_receive_tr'
-      @{const_syntax tagged_new_channel}
-      @{syntax_const "_tagged_new_channel"}
-  ]
-\<close>
-
-definition tagged_create_channel :: "nat \<Rightarrow> process family \<Rightarrow> process family" (\<open>\<langle>_\<rangle> \<star>\<close>) where
-  [simp]: "\<langle>_\<rangle> \<star> = \<star>"
 
 text \<open>
   \<^theory_text>\<open>de_bruijn\<close> expects there to be no chained facts. With chained facts present, there would be two
