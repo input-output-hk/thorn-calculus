@@ -7,6 +7,13 @@ imports
   "HOL-Library.Stream"
 begin
 
+text \<open>
+  We hide the constant~\<open>\<omega>\<close> that represents the smallest transfinite ordinal to prevent clashes
+  with~\<open>\<omega>\<close> used for optional actions.
+\<close>
+
+hide_const (open) \<omega>
+
 (* FIXME: Document the following at an appropriate place:
 
     \<^item> We use families for channels, because we need transitions to be homogeneous in channels. On
