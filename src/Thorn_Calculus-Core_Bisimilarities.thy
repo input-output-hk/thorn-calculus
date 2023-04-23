@@ -1515,7 +1515,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       "B' = B"
     and
       "R = post_receive n Y (\<lambda>y. A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
-      by (auto elim: transition_from_repeated_receive)
+      by (fast elim: transition_from_repeated_receive)+
     have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr> post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
       using repeated_receive_transition .
     then have "
@@ -1580,7 +1580,7 @@ next
       "B' = B"
     and
       "R = post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
-      by (auto elim: transition_from_repeated_receive)
+      by (fast elim: transition_from_repeated_receive)+
     have "
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
       \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr>

@@ -166,7 +166,7 @@ lemma no_mobility_new_channel_io:
 lemma repeated_receive_transition:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
   using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
-  by (subst repeated_receive_proper_def) (unfold post_receive_def)
+  by (subst repeated_receive_unfolding) (unfold post_receive_def)
 
 lemma transition_from_repeated_receive:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
@@ -175,7 +175,7 @@ proof -
   obtain n and X where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X" and "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
     by
       (
-        use assms in \<open>subst (asm) (2) repeated_receive_proper_def\<close>,
+        use assms in \<open>subst (asm) (2) repeated_receive_unfolding\<close>,
         cases \<alpha> "A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" Q rule: synchronous_transition.cases
       )
   with that show ?thesis

@@ -17,6 +17,9 @@ codatatype process =
   Parallel \<open>process\<close> \<open>process\<close> |
   NewChannel \<open>chan \<Rightarrow> process\<close>
 
+corec RepeatedReceive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process" where
+  "RepeatedReceive a P = Receive a (\<lambda>x. Parallel (P x) (RepeatedReceive a P))"
+
 definition
   stop :: "process family"
 where
@@ -37,9 +40,10 @@ definition
   new_channel :: "(chan \<Rightarrow> process family) \<Rightarrow> process family"
 where
   [simp]: "new_channel \<P> = (\<lambda>e. NewChannel (\<lambda>a. \<P> a e))"
-
-corec repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
-  "repeated_receive A \<P> e = Receive (A e) (\<lambda>x. Parallel (\<P> x e) (repeated_receive A \<P> e))"
+definition
+  repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
+where
+  [simp]: "repeated_receive A \<P> = (\<lambda>e. RepeatedReceive (A e) (\<lambda>x. \<P> x e))"
 
 text \<open>
   We define guarding of processes at the host-language level.
@@ -151,9 +155,15 @@ end
 
 unbundle process_family_syntax
 
-lemma repeated_receive_proper_def:
+lemma repeated_receive_unfolding:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  by (rule HOL.ext) (subst repeated_receive.code, simp)
+  by
+    (rule HOL.ext)
+    (
+      unfold repeated_receive_def receive_def parallel_def,
+      subst RepeatedReceive.code,
+      fact refl
+    )
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
   [simp]: "\<star> = new_channel \<circ> \<Delta>"
@@ -274,17 +284,7 @@ lemma family_uncurry_after_new_channel:
 
 lemma family_uncurry_after_repeated_receive:
   shows "\<nabla> (\<lambda>b. \<A> b \<triangleright>\<^sup>\<infinity> x. \<P> x b) = \<nabla> \<A> \<triangleright>\<^sup>\<infinity> x. \<nabla> (\<P> x)"
-  by
-    (
-      standard,
-      subst (1 2) repeated_receive_proper_def,
-      coinduction rule: repeated_receive.coinduct
-    )
-    (
-      use family_uncurry_after_receive family_uncurry_after_parallel in simp,
-      subst (3 4) repeated_receive_proper_def,
-      auto intro: repeated_receive.cong_intros
-    )
+  by simp
 
 lemma family_uncurry_after_general_parallel:
   shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
@@ -331,17 +331,7 @@ lemma adapted_after_new_channel:
 
 lemma adapted_after_repeated_receive:
   shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
-  by
-    (
-      standard,
-      subst (1 2) repeated_receive_proper_def,
-      coinduction rule: repeated_receive.coinduct
-    )
-    (
-      use adapted_after_receive adapted_after_parallel in simp,
-      subst (3 4) repeated_receive_proper_def,
-      auto intro: repeated_receive.cong_intros
-    )
+  by transfer (simp add: comp_def)
 
 lemma adapted_after_guard:
   shows "(v ? P) \<guillemotleft> \<E> = v ? P \<guillemotleft> \<E>"
