@@ -112,7 +112,8 @@ no_syntax
   "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
 translations
   "\<Prod>v\<leftarrow>vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
 print_translation \<open>
@@ -123,7 +124,8 @@ print_translation \<open>
   ]
 \<close>
 no_syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
 
 bundle process_family_syntax
 begin
@@ -147,7 +149,8 @@ syntax
 notation guard (infixr \<open>?\<close> 52)
 
 syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
+  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
 
 end
 
