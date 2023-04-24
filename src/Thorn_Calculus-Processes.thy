@@ -157,13 +157,8 @@ unbundle process_family_syntax
 
 lemma repeated_receive_unfolding:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  by
-    (rule HOL.ext)
-    (
-      unfold repeated_receive_def receive_def parallel_def,
-      subst RepeatedReceive.code,
-      fact refl
-    )
+  unfolding repeated_receive_def and receive_def parallel_def
+  by (subst RepeatedReceive.code) standard
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
   [simp]: "\<star> = new_channel \<circ> \<Delta>"
