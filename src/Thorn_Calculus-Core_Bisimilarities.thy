@@ -1645,7 +1645,7 @@ proof (induction xs arbitrary: \<Q>)
       unfolding post_receive_def .
   qed
   then show ?case
-    unfolding general_parallel.simps(1)
+    unfolding general_parallel_nil_unfolding
     by
       (intro
         synchronous.parallel_is_right_compatible_with_bisimilarity
@@ -1704,7 +1704,7 @@ next
     using thorn_simps
     by equivalence
   finally show ?case
-    unfolding general_parallel.simps(2) .
+    unfolding general_parallel_cons_unfolding .
 qed
 
 (*FIXME:

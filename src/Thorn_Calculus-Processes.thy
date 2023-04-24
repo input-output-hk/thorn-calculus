@@ -23,6 +23,10 @@ corec RepeatedReceive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Right
 definition Guard :: "bool \<Rightarrow> process \<Rightarrow> process" where
   [simp]: "Guard v p = (if v then p else Stop)"
 
+primrec GeneralParallel :: "('a \<Rightarrow> process) \<Rightarrow> 'a list \<Rightarrow> process" where
+  "GeneralParallel _ [] = Stop" |
+  "GeneralParallel P (v # vs) = Parallel (P v) (GeneralParallel P vs)"
+
 definition
   stop :: "process family"
 where
@@ -51,14 +55,10 @@ definition
   guard :: "bool \<Rightarrow> process family \<Rightarrow> process family"
 where
   [simp]: "guard v P = (\<lambda>e. Guard v (P e))"
-
-text \<open>
-  We define parallel composition over a list of processes families.
-\<close>
-
-primrec general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family" where
-  "general_parallel _ [] = stop" |
-  "general_parallel \<P> (v # vs) = parallel (\<P> v) (general_parallel \<P> vs)"
+definition
+  general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family"
+where
+  [simp]: "general_parallel \<P> vs = (\<lambda>e. GeneralParallel (\<lambda>v. \<P> v e) vs)"
 
 text \<open>
   We cannot put the \<^theory_text>\<open>translations\<close> and \<^theory_text>\<open>print_translation\<close> specifications into a bundle. However,
@@ -159,6 +159,14 @@ lemma repeated_receive_unfolding:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
   unfolding repeated_receive_def and receive_def parallel_def
   by (subst RepeatedReceive.code) standard
+
+lemma general_parallel_nil_unfolding:
+  shows "\<Prod>w \<leftarrow> []. \<P> w = \<zero>"
+  unfolding general_parallel_def and stop_def and GeneralParallel.simps(1) ..
+
+lemma general_parallel_cons_unfolding:
+  shows "\<Prod>w \<leftarrow> (v # vs). \<P> w = \<P> v \<parallel> \<Prod>w \<leftarrow> vs. \<P> w"
+  unfolding general_parallel_def and parallel_def and GeneralParallel.simps(2) ..
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
   [simp]: "\<star> = new_channel \<circ> \<Delta>"
@@ -283,9 +291,7 @@ lemma family_uncurry_after_repeated_receive:
 
 lemma family_uncurry_after_general_parallel:
   shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
-  by
-    (induction vs)
-    (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
+  by simp
 
 text \<open>
   The following trivially provable lemmas are stated, because two of them are used by the
@@ -334,9 +340,7 @@ lemma adapted_after_guard:
 
 lemma adapted_after_general_parallel:
   shows "(\<Prod>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Prod>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
-  by
-    (induction vs)
-    (simp_all only: general_parallel.simps adapted_after_stop adapted_after_parallel)
+  by transfer (simp add: comp_def)
 
 lemma adapted_after_create_channel:
   shows "\<star> P \<guillemotleft> \<E> = \<star> (P \<guillemotleft> on_tail \<E>)"
@@ -492,16 +496,7 @@ lemma environment_dependent_parallel:
 
 lemma environment_dependent_general_parallel:
   shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
-proof (induction vs)
-  case Nil
-  show ?case
-    by (simp only: general_parallel.simps(1))
-next
-  case Cons
-  then show ?case
-    unfolding general_parallel.simps(2)
-    by (subst environment_dependent_parallel, simp only:)
-qed
+  by (simp only: general_parallel_def)
 
 (*FIXME:
   Perhaps add \<^theory_text>\<open>environment_dependent\<close> lemmas also for higher-level constructs like the ones from
@@ -510,7 +505,9 @@ qed
 
 lemma general_parallel_conversion_deferral:
   shows "\<Prod>w \<leftarrow> map f vs. \<P> w = \<Prod>v \<leftarrow> vs. \<P> (f v)"
-  by (induction vs) simp_all
+  by
+    (induction vs)
+    (simp_all only: list.map general_parallel_nil_unfolding general_parallel_cons_unfolding)
 
 text \<open>
   \<^theory_text>\<open>de_bruijn\<close> expects there to be no chained facts. With chained facts present, there would be two

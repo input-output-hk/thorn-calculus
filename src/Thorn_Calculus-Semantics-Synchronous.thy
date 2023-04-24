@@ -59,8 +59,8 @@ lemma post_receive_after_parallel:
 
 lemma post_receive_after_general_parallel:
   shows "post_receive n X (\<lambda>x. \<Prod>v \<leftarrow> vs. \<P> v x) = \<Prod>v \<leftarrow> vs. post_receive n X (\<P> v)"
-  using post_receive_after_stop and post_receive_after_parallel
-  by (induction vs) (simp_all only: general_parallel.simps)
+  unfolding post_receive_def and adapted_after_general_parallel
+  by (simp only: general_parallel_def)
 
 lemma post_receive_after_new_channel:
   shows "post_receive n X (\<lambda>x. \<nu> a. \<P> x a) = \<nu> a. post_receive n X (\<lambda>x. \<P> x a)"
