@@ -113,9 +113,9 @@ no_syntax
 
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "\<Prod>v\<leftarrow>vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
+  "\<Prod>v \<leftarrow> vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
@@ -125,7 +125,7 @@ print_translation \<open>
 \<close>
 no_syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 
 bundle process_family_syntax
 begin
@@ -150,7 +150,7 @@ notation guard (infixr \<open>?\<close> 52)
 
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 0, 52] 52)
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 
 end
 
