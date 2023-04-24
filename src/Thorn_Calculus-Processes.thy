@@ -27,6 +27,100 @@ primrec GeneralParallel :: "('a \<Rightarrow> process) \<Rightarrow> 'a list \<R
   "GeneralParallel _ [] = Stop" |
   "GeneralParallel P (v # vs) = Parallel (P v) (GeneralParallel P vs)"
 
+text \<open>
+  We cannot put the \<^theory_text>\<open>translations\<close> and \<^theory_text>\<open>print_translation\<close> specifications into a bundle. However,
+  we need to put a corresponding \<^theory_text>\<open>syntax\<close> declaration before them. Therefore, we declare the
+  syntax, then specify the translations, and finally remove the syntax declaration, which can
+  ultimately be reintroduced by opening the bundle.
+\<close>
+
+text \<open>
+  The notation for \<^const>\<open>Receive\<close> cannot be declared with @{theory_text \<open>binder\<close>}, for the
+  following reasons:
+
+    \<^item> It does not allow binding multiple variables in one go (like in \<open>\<forall>x\<^sub>1 \<dots> x\<^sub>n. _\<close>).
+
+    \<^item> It has an extra parameter (for the channel) before the binder.
+
+  Therefore we introduce this notation using the low-level @{theory_text \<open>syntax\<close>},
+  @{theory_text \<open>translations\<close>}, and @{theory_text \<open>print_translation\<close>} constructs.
+\<close>
+
+text \<open>
+  We define a notation for repeated parallel composition combined with mapping. Since this notation
+  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
+\<close>
+
+no_syntax
+  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
+
+syntax
+  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "a \<triangleright> x. p" \<rightleftharpoons> "CONST Receive a (\<lambda>x. p)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax Receive} @{syntax_const "_Receive"}]
+\<close>
+no_syntax
+  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+
+syntax
+  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "a \<triangleright>\<^sup>\<infinity> x. p" \<rightleftharpoons> "CONST RepeatedReceive a (\<lambda>x. p)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax RepeatedReceive} @{syntax_const "_RepeatedReceive"}]
+\<close>
+no_syntax
+  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+
+syntax
+  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+translations
+  "\<Prod>v \<leftarrow> vs. p" \<rightleftharpoons> "CONST GeneralParallel (\<lambda>v. p) vs"
+print_translation \<open>
+  [
+    preserve_binder_abs_general_parallel_tr'
+      @{const_syntax GeneralParallel}
+      @{syntax_const "_GeneralParallel"}
+  ]
+\<close>
+no_syntax
+  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+
+bundle process_syntax
+begin
+
+notation Stop (\<open>\<zero>\<close>)
+
+notation Send (infix \<open>\<triangleleft>\<close> 52)
+
+syntax
+  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+
+notation Parallel (infixr \<open>\<parallel>\<close> 51)
+
+notation NewChannel (binder \<open>\<nu> \<close> 52)
+
+syntax
+  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+
+notation Guard (infixr \<open>?\<close> 52)
+
+syntax
+  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+
+end
+
 definition
   stop :: "process family"
 where
@@ -60,25 +154,6 @@ definition
 where
   [simp]: "general_parallel \<P> vs = (\<lambda>e. GeneralParallel (\<lambda>v. \<P> v e) vs)"
 
-text \<open>
-  We cannot put the \<^theory_text>\<open>translations\<close> and \<^theory_text>\<open>print_translation\<close> specifications into a bundle. However,
-  we need to put a corresponding \<^theory_text>\<open>syntax\<close> declaration before them. Therefore, we declare the
-  syntax, then specify the translations, and finally remove the syntax declaration, which can
-  ultimately be reintroduced by opening the bundle.
-\<close>
-
-text \<open>
-  The notation for \<^const>\<open>receive\<close> cannot be declared with @{theory_text \<open>binder\<close>}, for the
-  following reasons:
-
-    \<^item> It does not allow binding multiple variables in one go (like in \<open>\<forall>x\<^sub>1 \<dots> x\<^sub>n. _\<close>).
-
-    \<^item> It has an extra parameter (for the channel family) before the binder.
-
-  Therefore we introduce this notation using the low-level @{theory_text \<open>syntax\<close>},
-  @{theory_text \<open>translations\<close>}, and @{theory_text \<open>print_translation\<close>} constructs.
-\<close>
-
 syntax
   "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
   (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
@@ -102,14 +177,6 @@ print_translation \<open>
 no_syntax
   "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-text \<open>
-  We define a notation for repeated parallel composition combined with mapping. Since this notation
-  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
-\<close>
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
