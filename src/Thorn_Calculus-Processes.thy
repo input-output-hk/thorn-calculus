@@ -10,6 +10,8 @@ begin
 
 ML_file \<open>binder_preservation.ML\<close>
 
+subsection \<open>Plain Processes\<close>
+
 codatatype process =
   Stop |
   Send \<open>chan\<close> \<open>val\<close> |
@@ -121,6 +123,8 @@ syntax
 
 end
 
+subsection \<open>Typed Processes\<close>
+
 definition
   typed_stop :: "process"
 where
@@ -223,6 +227,8 @@ syntax
   (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 
 end
+
+subsection \<open>Process Families\<close>
 
 definition
   stop :: "process family"
