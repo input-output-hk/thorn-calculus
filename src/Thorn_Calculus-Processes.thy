@@ -122,6 +122,106 @@ syntax
 end
 
 definition
+  typed_stop :: "process"
+where
+  [simp]: "typed_stop = Stop"
+definition
+  typed_send :: "'a channel \<Rightarrow> 'a::embeddable \<Rightarrow> process"
+where
+  [simp]: "typed_send a x = Send (untyped a) (encode x)"
+definition
+  typed_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
+where
+  [simp]: "typed_receive a P = Receive (untyped a) (\<lambda>x. P (decode x))"
+definition
+  typed_parallel :: "process \<Rightarrow> process \<Rightarrow> process"
+where
+  [simp]: "typed_parallel p q = Parallel p q"
+definition
+  typed_new_channel :: "('a channel \<Rightarrow> process) \<Rightarrow> process"
+where
+  [simp]: "typed_new_channel P = NewChannel (\<lambda>a. P (typed a))"
+definition
+  typed_repeated_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
+where
+  [simp]: "typed_repeated_receive a P = RepeatedReceive (untyped a) (\<lambda>x. P (decode x))"
+definition
+  typed_guard :: "bool \<Rightarrow> process \<Rightarrow> process"
+where
+  [simp]: "typed_guard v p = Guard v p"
+definition
+  typed_general_parallel :: "('a \<Rightarrow> process) \<Rightarrow> 'a list \<Rightarrow> process"
+where
+  [simp]: "typed_general_parallel P vs = GeneralParallel P vs"
+
+syntax
+  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "a \<triangleright> x. p" \<rightleftharpoons> "CONST typed_receive a (\<lambda>x. p)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax typed_receive} @{syntax_const "_typed_receive"}]
+\<close>
+no_syntax
+  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+
+syntax
+  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+translations
+  "a \<triangleright>\<^sup>\<infinity> x. p" \<rightleftharpoons> "CONST typed_repeated_receive a (\<lambda>x. p)"
+print_translation \<open>
+  [preserve_binder_abs_receive_tr' @{const_syntax typed_repeated_receive} @{syntax_const "_typed_repeated_receive"}]
+\<close>
+no_syntax
+  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+
+syntax
+  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+translations
+  "\<Prod>v \<leftarrow> vs. p" \<rightleftharpoons> "CONST typed_general_parallel (\<lambda>v. p) vs"
+print_translation \<open>
+  [
+    preserve_binder_abs_general_parallel_tr'
+      @{const_syntax typed_general_parallel}
+      @{syntax_const "_typed_general_parallel"}
+  ]
+\<close>
+no_syntax
+  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process\<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+
+bundle typed_process_syntax
+begin
+
+notation typed_stop (\<open>\<zero>\<close>)
+
+notation typed_send (infix \<open>\<triangleleft>\<close> 52)
+
+syntax
+  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
+
+notation typed_parallel (infixr \<open>\<parallel>\<close> 51)
+
+notation typed_new_channel (binder \<open>\<nu> \<close> 52)
+
+syntax
+  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
+
+notation typed_guard (infixr \<open>?\<close> 52)
+
+syntax
+  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+
+end
+
+definition
   stop :: "process family"
 where
   [simp]: "stop = (\<lambda>_. Stop)"
