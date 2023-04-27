@@ -46,14 +46,6 @@ text \<open>
   @{theory_text \<open>translations\<close>}, and @{theory_text \<open>print_translation\<close>} constructs.
 \<close>
 
-text \<open>
-  We define a notation for repeated parallel composition combined with mapping. Since this notation
-  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
-\<close>
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
-
 syntax
   "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
   (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
@@ -82,7 +74,7 @@ syntax
   "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
   (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "\<Prod>v \<leftarrow> vs. p" \<rightleftharpoons> "CONST GeneralParallel (\<lambda>v. p) vs"
+  "_GeneralParallel v vs p" \<rightleftharpoons> "CONST GeneralParallel (\<lambda>v. p) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
@@ -114,6 +106,14 @@ syntax
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 
 notation Guard (infixr \<open>?\<close> 52)
+
+text \<open>
+  We define a notation for repeated parallel composition combined with mapping. Since this notation
+  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
+\<close>
+
+no_syntax
+  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
   "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
@@ -182,7 +182,7 @@ syntax
   "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
   (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "\<Prod>v \<leftarrow> vs. p" \<rightleftharpoons> "CONST typed_general_parallel (\<lambda>v. p) vs"
+  "_typed_general_parallel v vs p" \<rightleftharpoons> "CONST typed_general_parallel (\<lambda>v. p) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
@@ -214,6 +214,9 @@ syntax
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 
 notation typed_guard (infixr \<open>?\<close> 52)
+
+no_syntax
+  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
   "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
@@ -282,7 +285,7 @@ syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
   (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "\<Prod>v \<leftarrow> vs. P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
+  "_general_parallel v vs P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
@@ -314,6 +317,9 @@ syntax
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 
 notation guard (infixr \<open>?\<close> 52)
+
+no_syntax
+  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
