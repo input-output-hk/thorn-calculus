@@ -333,7 +333,7 @@ unbundle process_family_syntax
 
 lemma repeated_receive_unfolding:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  unfolding repeated_receive_def and receive_def parallel_def
+  unfolding repeated_receive_def and receive_def and parallel_def
   by (subst RepeatedReceive.code) standard
 
 lemma general_parallel_nil_unfolding:
@@ -341,7 +341,7 @@ lemma general_parallel_nil_unfolding:
   unfolding general_parallel_def and stop_def and GeneralParallel.simps(1) ..
 
 lemma general_parallel_cons_unfolding:
-  shows "\<Prod>w \<leftarrow> (v # vs). \<P> w = \<P> v \<parallel> \<Prod>w \<leftarrow> vs. \<P> w"
+  shows "\<Prod>w \<leftarrow> v # vs. \<P> w = \<P> v \<parallel> \<Prod>w \<leftarrow> vs. \<P> w"
   unfolding general_parallel_def and parallel_def and GeneralParallel.simps(2) ..
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
