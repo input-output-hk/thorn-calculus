@@ -14,6 +14,7 @@ jobs:
           chapter-name: IOG
           source-path: src
           isabelle-version: 2022
+          afp-sessions: ''
           github-sessions:
             input-output-hk/equivalence-reasoner:src
             input-output-hk/transition-systems:src
