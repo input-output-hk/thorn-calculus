@@ -6,7 +6,7 @@ imports
 begin
 
 fun asynchronous_transition :: "action \<Rightarrow> process family relation" (\<open>'(\<rightarrow>\<^sub>a\<lparr>_\<rparr>')\<close>) where
-  "(\<rightarrow>\<^sub>a\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>) = {\<hole> \<guillemotleft> suffix n} OO {A \<guillemotleft> suffix n \<triangleleft> X \<parallel> \<hole>}" |
+  "(\<rightarrow>\<^sub>a\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr>) = {\<hole> \<guillemotleft> suffix n} OO {A \<guillemotleft> suffix n \<triangleleft> X \<parallel> \<hole>}" |
   "(\<rightarrow>\<^sub>a\<lparr>\<alpha>\<rparr>) = (\<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr>)"
 
 abbreviation

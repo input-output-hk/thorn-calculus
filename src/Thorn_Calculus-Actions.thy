@@ -15,14 +15,14 @@ datatype action =
 
 abbreviation
   sending :: "chan family \<Rightarrow> nat \<Rightarrow> val family \<Rightarrow> action"
-  (\<open>(_ \<triangleleft>/ \<star>()\<^bsup>_\<^esup> _)\<close> [53, 0, 53] 52)
+  (\<open>(_ \<triangleleft>\<^bsub>_\<^esub>/ _)\<close> [53, 0, 53] 52)
 where
-  "A \<triangleleft> \<star>\<^bsup>n\<^esup> X \<equiv> IO Sending A n X"
+  "A \<triangleleft>\<^bsub>n\<^esub> X \<equiv> IO Sending A n X"
 
 abbreviation
   receiving :: "chan family \<Rightarrow> nat \<Rightarrow> val family \<Rightarrow> action"
-  (\<open>(_ \<triangleright>/ \<star>()\<^bsup>_\<^esup> _)\<close> [53, 0, 53] 52)
+  (\<open>(_ \<triangleright>\<^bsub>_\<^esub>/ _)\<close> [53, 0, 53] 52)
 where
-  "A \<triangleright> \<star>\<^bsup>n\<^esup> X \<equiv> IO Receiving A n X"
+  "A \<triangleright>\<^bsub>n\<^esub> X \<equiv> IO Receiving A n X"
 
 end
