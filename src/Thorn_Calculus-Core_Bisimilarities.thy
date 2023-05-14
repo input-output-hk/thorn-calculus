@@ -14,7 +14,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"
     case (receiving n X)
     have "
       A \<guillemotleft> tail \<triangleright> x. \<nabla> (\<P> x)
-      \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> remove n\<rparr>
+      \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright>\<^bsub>n\<^esub> X \<guillemotleft> remove n\<rparr>
       post_receive n (X \<guillemotleft> remove n) (\<lambda>x. \<nabla> (\<P> x))"
       using synchronous_transition.receiving .
     moreover
@@ -26,14 +26,14 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"
       unfolding post_receive_def
       by transfer (simp add: sdrop_shift)
     ultimately
-    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> b. post_receive n X (\<lambda>x. \<P> x b)"
+    have "\<nu> b. A \<triangleright> x. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> \<nu> b. post_receive n X (\<lambda>x. \<P> x b)"
       by (simp only: new_channel_io)
     moreover
     have "\<nu> b. post_receive n X (\<lambda>x. \<P> x b) = post_receive n X (\<lambda>x. \<nu> b. \<P> x b)"
       unfolding post_receive_def
       by transfer simp
     ultimately show ?thesis
-      unfolding \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<nu> b. \<P> x b)\<close>
+      unfolding \<open>\<alpha> = A \<triangleright>\<^bsub>n\<^esub> X\<close> and \<open>S = post_receive n X (\<lambda>x. \<nu> b. \<P> x b)\<close>
       by (intro exI conjI, use in assumption) simp
   qed
 next
@@ -65,7 +65,7 @@ next
             add: stake_shift sdrop_shift sdrop.simps(2) [where n = 0] stake_sdrop
           )
     qed
-    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X (\<lambda>x. \<nu> b. \<P> x b)"
+    have "A \<triangleright> x. \<nu> b. \<P> x b \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> post_receive n X (\<lambda>x. \<nu> b. \<P> x b)"
       using receiving .
     moreover
     have "post_receive n X (\<lambda>x. \<nu> b. \<P> x b) = \<nu> b. post_receive n X (\<lambda>x. \<P> x b)"
@@ -96,12 +96,12 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
   then show ?case
   proof cases
     case (scope_opening i n X A)
-    from \<open>\<nu> b. \<nabla> (\<lambda>a. \<P> a b) \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
+    from \<open>\<nu> b. \<nabla> (\<lambda>a. \<P> a b) \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
     proof cases
       case (scope_opening j m)
       from scope_opening(4) have "
         \<nabla> (\<lambda>b. \<nabla> (\<lambda>a. \<P> a b)) \<guillemotleft> move 0 1
-        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move (Suc m) i \<guillemotleft> move m j \<guillemotleft> on_suffix m (move 0 1)\<rparr>
+        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> move (Suc m) i \<guillemotleft> move m j \<guillemotleft> on_suffix m (move 0 1)\<rparr>
         S \<guillemotleft> move (Suc m) i \<guillemotleft> move m j \<guillemotleft> on_suffix m (move 0 1)"
         unfolding \<open>n = Suc m\<close>
         by (fact adapted_io_transition)
@@ -222,13 +222,13 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
           using dependent_on_chan_at_after_source_anchored_move_adapted .
         finally show ?thesis .
       qed
-      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc (Suc m)\<^esup> X\<rparr> S"
+      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc (Suc m)\<^esub> X\<rparr> S"
         using \<open>dependent_on_chan_at i X\<close> and \<open>dependent_on_chan_at j (X \<guillemotleft> move n i)\<close>
         unfolding \<open>n = Suc m\<close>
         using \<open>i' \<le> Suc m\<close> and \<open>j' \<le> m\<close>
         by (simp only: synchronous_transition.scope_opening family_uncurry_after_new_channel)
       then show ?thesis
-        unfolding \<open>\<alpha> = A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<close> and \<open>n = Suc m\<close>
+        unfolding \<open>\<alpha> = A \<triangleleft>\<^bsub>Suc n\<^esub> X\<close> and \<open>n = Suc m\<close>
         by (intro exI conjI, assumption) simp
     next
       case (new_channel_io \<Q>)
@@ -256,7 +256,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
       from new_channel_io(2)
       have "
         \<nabla> (\<lambda>b. \<nabla> (\<lambda>a. \<P> a b)) \<guillemotleft> move 0 1
-        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i \<guillemotleft> remove n \<guillemotleft> on_suffix n (move 0 1)\<rparr>
+        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i \<guillemotleft> remove n \<guillemotleft> on_suffix n (move 0 1)\<rparr>
         \<nabla>\<^bsub>n\<^esub> \<Q> \<guillemotleft> on_suffix n (move 0 1)"
         by (fact adapted_io_transition)
       moreover
@@ -300,7 +300,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
           by (simp only: move_adapted_after_deeper_uncurry)
         finally show ?thesis .
       qed
-      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<rparr> \<nu> b. \<Q> b \<guillemotleft> move i n"
+      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc n\<^esub> X\<rparr> \<nu> b. \<Q> b \<guillemotleft> move i n"
         using \<open>i \<le> n\<close> and \<open>dependent_on_chan_at i X\<close>
         by
           (simp only:
@@ -309,7 +309,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
             synchronous_transition.new_channel_io
           )
       then show ?thesis
-        unfolding \<open>\<alpha> = A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<close> and \<open>S = \<nu> b. \<Q> b \<guillemotleft> move i n\<close>
+        unfolding \<open>\<alpha> = A \<triangleleft>\<^bsub>Suc n\<^esub> X\<close> and \<open>S = \<nu> b. \<Q> b \<guillemotleft> move i n\<close>
         by (intro exI conjI, use in assumption) simp
     qed
   next
@@ -332,7 +332,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
       moreover
       from scope_opening(5) have "
         \<nabla> (\<lambda>b. \<nabla> (\<lambda>a. \<P> a b)) \<guillemotleft> move 0 1
-        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> remove (Suc m) \<guillemotleft> move m i \<guillemotleft> on_suffix m (move 0 1)\<rparr>
+        \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<guillemotleft> tail \<guillemotleft> move 0 1 \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> remove (Suc m) \<guillemotleft> move m i \<guillemotleft> on_suffix m (move 0 1)\<rparr>
         \<nabla>\<^bsub>Suc m\<^esub> \<Q> \<guillemotleft> move m i \<guillemotleft> on_suffix m (move 0 1)"
         unfolding \<open>n = Suc m\<close>
         by (fact adapted_io_transition)
@@ -378,7 +378,7 @@ proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where
           by (simp only: move_adapted_after_source_uncurry)
         finally show ?thesis .
       qed
-      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc m\<^esup> X\<rparr> \<nu> a. \<Q> a"
+      ultimately have "\<nu> b. \<nu> a. \<P> a b \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc m\<^esub> X\<rparr> \<nu> a. \<Q> a"
         using \<open>i \<le> m\<close> and \<open>dependent_on_chan_at i (X \<guillemotleft> remove n)\<close>
         unfolding \<open>n = Suc m\<close>
         by
@@ -608,20 +608,20 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
       case (scope_opening i m)
       from \<open>\<eta> \<noteq> \<mu>\<close> and \<open>\<eta> = Sending\<close> have "\<mu> = Receiving"
         by (cases \<mu>) simp
-      from \<open>Q \<rightarrow>\<^sub>s\<lparr>IO \<mu> A n X\<rparr> Q'\<close> and \<open>i \<le> m\<close> have "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>Suc m\<^esup> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
+      from \<open>Q \<rightarrow>\<^sub>s\<lparr>IO \<mu> A n X\<rparr> Q'\<close> and \<open>i \<le> m\<close> have "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>Suc m\<^esub> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
         unfolding \<open>\<mu> = Receiving\<close> and \<open>n = Suc m\<close>
         by (simp only: receiving_transition_with_move_adapted_target_part)
-      then have "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
+      then have "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
         by
           (simp add:
             receiving_transition_with_remove_adapted_source_part
             identity_as_move [symmetric]
             identity_adapted
           )
-      then have "Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
+      then have "Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleright>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> Q' \<guillemotleft> move m i"
         unfolding tail_def
         by transfer (simp add: comp_def)
-      with \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i\<close>
+      with \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i\<close>
       have "\<nabla> \<P> \<parallel> Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> \<star>\<^bsup>m\<^esup> (R \<guillemotleft> move m i \<parallel> Q' \<guillemotleft> move m i)"
         by (blast intro: synchronous_transition.communication)
       then have "\<nabla> (\<lambda>a. \<P> a \<parallel> Q) \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> \<star>\<^bsup>m\<^esup> ((R \<parallel> Q') \<guillemotleft> move m i)"
@@ -679,17 +679,17 @@ proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = 
     from \<open>\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>IO \<eta> A n X\<rparr> R\<close> show ?thesis
     proof cases
       case (scope_opening i m)
-      from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i\<close>
-      have "\<nabla> \<P> \<parallel> Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i \<parallel> Q \<guillemotleft> tail \<guillemotleft> suffix m"
+      from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i\<close>
+      have "\<nabla> \<P> \<parallel> Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> R \<guillemotleft> move m i \<parallel> Q \<guillemotleft> tail \<guillemotleft> suffix m"
         by (fact synchronous_transition.parallel_left_io)
       with \<open>i \<le> m\<close>
-      have "\<nabla> (\<lambda>a. \<P> a \<parallel> Q) \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>m\<^esup> X \<guillemotleft> move m i\<rparr> (R \<parallel> Q \<guillemotleft> suffix (Suc m)) \<guillemotleft> move m i"
+      have "\<nabla> (\<lambda>a. \<P> a \<parallel> Q) \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>m\<^esub> X \<guillemotleft> move m i\<rparr> (R \<parallel> Q \<guillemotleft> suffix (Suc m)) \<guillemotleft> move m i"
         unfolding tail_def
         by
           (simp only: adapted_after_parallel composition_adapted [symmetric] suffix_after_move)
           (transfer, simp)
       with \<open>i \<le> m\<close> and \<open>dependent_on_chan_at i X\<close>
-      have "\<nu> a. (\<P> a \<parallel> Q) \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc m\<^esup> X\<rparr> R \<parallel> Q \<guillemotleft> suffix (Suc m)"
+      have "\<nu> a. (\<P> a \<parallel> Q) \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc m\<^esub> X\<rparr> R \<parallel> Q \<guillemotleft> suffix (Suc m)"
         by (fact synchronous_transition.scope_opening)
       then show ?thesis
         unfolding \<open>\<alpha> = IO \<eta> A n X\<close> and \<open>S = R \<parallel> Q \<guillemotleft> suffix n\<close> and \<open>\<eta> = Sending\<close> and \<open>n = Suc m\<close>
@@ -770,7 +770,7 @@ next
   then show ?case
   proof cases
     case (scope_opening i n X A)
-    from \<open>\<nabla> \<P> \<parallel> Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
+    from \<open>\<nabla> \<P> \<parallel> Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
     proof cases
       case (parallel_left_io P')
       have "S = P' \<guillemotleft> move i n \<parallel> Q \<guillemotleft> suffix (Suc n)"
@@ -785,22 +785,22 @@ next
           by (simp only: adapted_after_parallel composition_adapted [symmetric] suffix_after_move)
         finally show ?thesis .
       qed
-      from \<open>i \<le> n\<close> and \<open>dependent_on_chan_at i X\<close> and \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> P'\<close>
-      have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<rparr> P' \<guillemotleft> move i n"
+      from \<open>i \<le> n\<close> and \<open>dependent_on_chan_at i X\<close> and \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i\<rparr> P'\<close>
+      have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc n\<^esub> X\<rparr> P' \<guillemotleft> move i n"
         by
           (simp only:
             synchronous_transition.scope_opening
             composition_adapted [symmetric]
             back_and_forth_moves identity_adapted
           )
-      then have "\<nu> a. \<P> a \<parallel> Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<rparr> P' \<guillemotleft> move i n \<parallel> Q \<guillemotleft> suffix (Suc n)"
+      then have "\<nu> a. \<P> a \<parallel> Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc n\<^esub> X\<rparr> P' \<guillemotleft> move i n \<parallel> Q \<guillemotleft> suffix (Suc n)"
         by (fact synchronous_transition.parallel_left_io)
       then show ?thesis
-        unfolding \<open>\<alpha> = A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X\<close> and \<open>S = P' \<guillemotleft> move i n \<parallel> Q \<guillemotleft> suffix (Suc n)\<close>
+        unfolding \<open>\<alpha> = A \<triangleleft>\<^bsub>Suc n\<^esub> X\<close> and \<open>S = P' \<guillemotleft> move i n \<parallel> Q \<guillemotleft> suffix (Suc n)\<close>
         by (intro exI conjI, use in assumption) simp
     next
       case (parallel_right_io R)
-      from \<open>Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> R\<close>
+      from \<open>Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i\<rparr> R\<close>
       obtain Y where "X \<guillemotleft> move n i = Y \<guillemotleft> on_suffix n tail"
         by (elim sending_transition_from_adapted)
       have "X = Y \<guillemotleft> remove i"
@@ -900,19 +900,19 @@ next
         from \<open>\<eta> \<noteq> \<mu>\<close> and \<open>\<eta> = Sending\<close> have "\<mu> = Receiving"
           by (cases \<mu>) simp
         from \<open>Q \<guillemotleft> tail \<rightarrow>\<^sub>s\<lparr>IO \<mu> A' n X'\<rparr> U\<close> obtain A
-          where "A' = A \<guillemotleft> tail" and "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright> \<star>\<^bsup>n\<^esup> X'\<rparr> U"
+          where "A' = A \<guillemotleft> tail" and "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright>\<^bsub>n\<^esub> X'\<rparr> U"
           unfolding tail_def and \<open>\<mu> = Receiving\<close>
           by (elim receiving_transition_from_adapted, transfer, simp add: comp_def)
         show ?thesis
         proof (cases "dependent_on_chan_at n X'")
           case True
-          from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X'\<rparr> P'\<close> have "\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X' \<guillemotleft> move n n\<rparr> P' \<guillemotleft> move n n"
+          from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X'\<rparr> P'\<close> have "\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X' \<guillemotleft> move n n\<rparr> P' \<guillemotleft> move n n"
             unfolding \<open>\<eta> = Sending\<close> and \<open>A' = A \<guillemotleft> tail\<close>
             by (simp only: identity_as_move [symmetric] identity_adapted)
-          with \<open>dependent_on_chan_at n X'\<close> have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>Suc n\<^esup> X'\<rparr> P'"
+          with \<open>dependent_on_chan_at n X'\<close> have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>Suc n\<^esub> X'\<rparr> P'"
             by (simp only: scope_opening [where i = n])
           moreover
-          from \<open>Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright> \<star>\<^bsup>n\<^esup> X'\<rparr> U\<close> have "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>Suc n\<^esup> X'\<rparr> U"
+          from \<open>Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright>\<^bsub>n\<^esub> X'\<rparr> U\<close> have "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>Suc n\<^esub> X'\<rparr> U"
             by
               (simp add:
                 receiving_transition_with_remove_adapted_source_part
@@ -932,15 +932,15 @@ next
           then obtain X where "X' = X \<guillemotleft> remove n"
             by (erule not_dependent_on_chan_at)
           from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X'\<rparr> P'\<close>
-          have left_transition: "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> a. \<Delta>\<^bsub>n\<^esub> P' a"
+          have left_transition: "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>n\<^esub> X\<rparr> \<nu> a. \<Delta>\<^bsub>n\<^esub> P' a"
             unfolding \<open>\<eta> = Sending\<close> and \<open>A' = A \<guillemotleft> tail\<close> and \<open>X' = X \<guillemotleft> remove n\<close>
             by (simp only: new_channel_io deep_uncurry_after_deep_curry pointfree_idE)
-          from \<open>Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright> \<star>\<^bsup>n\<^esup> X'\<rparr> U\<close>
-          have "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright> \<star>\<^bsup>n\<^esup> X \<guillemotleft> on_suffix n (remove 0)\<rparr> U"
+          from \<open>Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright>\<^bsub>n\<^esub> X'\<rparr> U\<close>
+          have "Q \<guillemotleft> remove 0 \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> remove 0 \<triangleright>\<^bsub>n\<^esub> X \<guillemotleft> on_suffix n (remove 0)\<rparr> U"
             unfolding \<open>X' = X \<guillemotleft> remove n\<close>
             by (simp add: on_suffix_remove)
           then obtain Q'
-            where "U = Q' \<guillemotleft> on_suffix n (remove 0)" and right_transition: "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> Q'"
+            where "U = Q' \<guillemotleft> on_suffix n (remove 0)" and right_transition: "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> Q'"
             by (erule adapted_receiving_transition_from_adapted)
           from \<open>U = Q' \<guillemotleft> on_suffix n (remove 0)\<close> have "U = Q' \<guillemotleft> remove n"
             by (simp add: on_suffix_remove)
@@ -971,17 +971,17 @@ next
           and
             "U = Q' \<guillemotleft> on_suffix n tail"
           and
-            "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>n\<^esup> X\<rparr> Q'"
+            "Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>n\<^esub> X\<rparr> Q'"
           unfolding \<open>\<mu> = Sending\<close>
           by (erule sending_transition_from_adapted)
         from \<open>X' = X \<guillemotleft> on_suffix n tail\<close> and \<open>U = Q' \<guillemotleft> on_suffix n tail\<close>
         have "X' = X \<guillemotleft> remove n" and "U = Q' \<guillemotleft> remove n"
           unfolding tail_def
           by (transfer, simp add: comp_def)+
-        from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X'\<rparr> P'\<close> have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> \<nu> a. \<Delta>\<^bsub>n\<^esub> P' a"
+        from \<open>\<nabla> \<P> \<rightarrow>\<^sub>s\<lparr>IO \<eta> A' n X'\<rparr> P'\<close> have "\<nu> a. \<P> a \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> \<nu> a. \<Delta>\<^bsub>n\<^esub> P' a"
             unfolding \<open>\<eta> = Receiving\<close> and \<open>A' = A \<guillemotleft> tail\<close> and \<open>X' = X \<guillemotleft> remove n\<close>
             by (simp only: new_channel_io deep_uncurry_after_deep_curry pointfree_idE)
-        with \<open>Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft> \<star>\<^bsup>n\<^esup> X\<rparr> Q'\<close> have "\<nu> a. \<P> a \<parallel> Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> \<star>\<^bsup>n\<^esup> (\<nu> a. \<Delta>\<^bsub>n\<^esub> P' a \<parallel> Q')"
+        with \<open>Q \<rightarrow>\<^sub>s\<lparr>A \<triangleleft>\<^bsub>n\<^esub> X\<rparr> Q'\<close> have "\<nu> a. \<P> a \<parallel> Q \<rightarrow>\<^sub>s\<lparr>\<tau>\<rparr> \<star>\<^bsup>n\<^esup> (\<nu> a. \<Delta>\<^bsub>n\<^esub> P' a \<parallel> Q')"
           by (blast intro: synchronous_transition.communication)
         then show ?thesis
           unfolding
@@ -1301,7 +1301,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = \<bottom>])
   from \<open>\<nu> _. \<zero> \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close> show ?case
   proof cases
     case (scope_opening i n X A)
-    from \<open>\<zero> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft> \<star>\<^bsup>n\<^esup> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
+    from \<open>\<zero> \<rightarrow>\<^sub>s\<lparr>A \<guillemotleft> tail \<triangleleft>\<^bsub>n\<^esub> X \<guillemotleft> move n i\<rparr> S \<guillemotleft> move n i\<close> show ?thesis
       by cases
   next
     case (new_channel_io \<eta> A n X \<Q>)
@@ -1416,19 +1416,19 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
 next
   case (backward_simulation \<alpha> S)
   from \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
-  obtain n and X where "\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X" and "S = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+  obtain n and X where "\<alpha> = A \<triangleright>\<^bsub>n\<^esub> X" and "S = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     by (erule transition_from_repeated_receive)
   with \<open>A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close>
-  have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
+  have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     by (simp only:)
   then have "
     A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x
-    \<rightarrow>\<^sub>s\<lparr>A \<triangleright> \<star>\<^bsup>n\<^esup> X\<rparr>
+    \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr>
     (post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n) \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
     by (fact parallel_left_io)
   then show ?case
     unfolding
-      \<open>\<alpha> = A \<triangleright> \<star>\<^bsup>n\<^esup> X\<close> and \<open>S = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
+      \<open>\<alpha> = A \<triangleright>\<^bsub>n\<^esub> X\<close> and \<open>S = post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n\<close>
     using
       left_amended_double_suffix_adapted
     and
@@ -1516,11 +1516,11 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
     and
       "R = post_receive n Y (\<lambda>y. A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
       by (fast elim: transition_from_repeated_receive)+
-    have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr> post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
+    have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr> post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
       using repeated_receive_transition .
     then have "
       A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y
-      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr>
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr>
       (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
       by (fact synchronous_transition.parallel_right_io)
     then show ?thesis
@@ -1583,12 +1583,12 @@ next
       by (fast elim: transition_from_repeated_receive)+
     have "
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
-      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr>
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr>
       post_receive n Y (\<lambda>y. A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
       using repeated_receive_transition .
     then have "
       A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
-      \<rightarrow>\<^sub>s\<lparr>B \<triangleright> \<star>\<^bsup>n\<^esup> Y\<rparr>
+      \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr>
       (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel>
       post_receive n Y (\<lambda>y. A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
       by (fact synchronous_transition.parallel_right_io)
