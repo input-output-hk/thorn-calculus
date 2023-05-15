@@ -10,104 +10,50 @@ begin
 
 ML_file \<open>binder_preservation.ML\<close>
 
-subsection \<open>Plain Processes\<close>
-
-codatatype process =
-  Stop |
-  Send \<open>chan\<close> \<open>val\<close> |
-  Receive \<open>chan\<close> \<open>val \<Rightarrow> process\<close> |
-  Parallel \<open>process\<close> \<open>process\<close> |
-  NewChannel \<open>chan \<Rightarrow> process\<close>
-
-corec RepeatedReceive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process" where
-  "RepeatedReceive a P = Receive a (\<lambda>x. Parallel (P x) (RepeatedReceive a P))"
-
-definition Guard :: "bool \<Rightarrow> process \<Rightarrow> process" where
-  [simp]: "Guard v p = (if v then p else Stop)"
-
-primrec GeneralParallel :: "('a \<Rightarrow> process) \<Rightarrow> 'a list \<Rightarrow> process" where
-  "GeneralParallel _ [] = Stop" |
-  "GeneralParallel P (v # vs) = Parallel (P v) (GeneralParallel P vs)"
+consts
+  stop :: 'p (\<open>\<zero>\<close>)
+  send :: "'c \<Rightarrow> 'v \<Rightarrow> 'p" (infix \<open>\<triangleleft>\<close> 52)
+  receive :: "'c \<Rightarrow> ('v \<Rightarrow> 'p) \<Rightarrow> 'p"
+  parallel :: "'p \<Rightarrow> 'p \<Rightarrow> 'p" (infixr \<open>\<parallel>\<close> 51)
+  new_channel :: "('c \<Rightarrow> 'p) \<Rightarrow> 'p" (binder \<open>\<nu> \<close> 52)
+  repeated_receive :: "'c \<Rightarrow> ('v \<Rightarrow> 'p) \<Rightarrow> 'p"
 
 text \<open>
-  We cannot put the \<^theory_text>\<open>translations\<close> and \<^theory_text>\<open>print_translation\<close> specifications into a bundle. However,
-  we need to put a corresponding \<^theory_text>\<open>syntax\<close> declaration before them. Therefore, we declare the
-  syntax, then specify the translations, and finally remove the syntax declaration, which can
-  ultimately be reintroduced by opening the bundle.
-\<close>
+  The notations for \<^const>\<open>receive\<close> and \<^const>\<open>repeated_receive\<close> cannot be declared with
+  @{theory_text \<open>binder\<close>}, for the following reasons:
 
-text \<open>
-  The notation for \<^const>\<open>Receive\<close> cannot be declared with @{theory_text \<open>binder\<close>}, for the
-  following reasons:
+    \<^item> They do not allow binding multiple variables in one go (like in \<open>\<forall>x\<^sub>1 \<dots> x\<^sub>n. _\<close>).
 
-    \<^item> It does not allow binding multiple variables in one go (like in \<open>\<forall>x\<^sub>1 \<dots> x\<^sub>n. _\<close>).
+    \<^item> They have an extra parameter (for the channel) before the binder.
 
-    \<^item> It has an extra parameter (for the channel) before the binder.
-
-  Therefore we introduce this notation using the low-level @{theory_text \<open>syntax\<close>},
+  Therefore we introduce these notation using the low-level @{theory_text \<open>syntax\<close>},
   @{theory_text \<open>translations\<close>}, and @{theory_text \<open>print_translation\<close>} constructs.
 \<close>
 
 syntax
-  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  "_receive" :: "'c \<Rightarrow> pttrn \<Rightarrow> 'p \<Rightarrow> 'p"
   (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
 translations
-  "a \<triangleright> x. p" \<rightleftharpoons> "CONST Receive a (\<lambda>x. p)"
+  "a \<triangleright> x. p" \<rightleftharpoons> "CONST receive a (\<lambda>x. p)"
 print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax Receive} @{syntax_const "_Receive"}]
+  [preserve_binder_abs_receive_tr' @{const_syntax receive} @{syntax_const "_receive"}]
 \<close>
-no_syntax
-  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
 
 syntax
-  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  "_repeated_receive" :: "'c \<Rightarrow> pttrn \<Rightarrow> 'p \<Rightarrow> 'p"
   (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 translations
-  "a \<triangleright>\<^sup>\<infinity> x. p" \<rightleftharpoons> "CONST RepeatedReceive a (\<lambda>x. p)"
+  "a \<triangleright>\<^sup>\<infinity> x. p" \<rightleftharpoons> "CONST repeated_receive a (\<lambda>x. p)"
 print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax RepeatedReceive} @{syntax_const "_RepeatedReceive"}]
+  [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
 \<close>
-no_syntax
-  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
 
-syntax
-  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-translations
-  "_GeneralParallel v vs p" \<rightleftharpoons> "CONST GeneralParallel (\<lambda>v. p) vs"
-print_translation \<open>
-  [
-    preserve_binder_abs_general_parallel_tr'
-      @{const_syntax GeneralParallel}
-      @{syntax_const "_GeneralParallel"}
-  ]
-\<close>
-no_syntax
-  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+definition guard :: "bool \<Rightarrow> 'p \<Rightarrow> 'p" (infixr \<open>?\<close> 52) where
+  [simp]: "v ? p = (if v then p else \<zero>)"
 
-bundle process_syntax
-begin
-
-notation Stop (\<open>\<zero>\<close>)
-
-notation Send (infix \<open>\<triangleleft>\<close> 52)
-
-syntax
-  "_Receive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-
-notation Parallel (infixr \<open>\<parallel>\<close> 51)
-
-notation NewChannel (binder \<open>\<nu> \<close> 52)
-
-syntax
-  "_RepeatedReceive" :: "chan \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-notation Guard (infixr \<open>?\<close> 52)
+primrec general_parallel :: "('a \<Rightarrow> 'p) \<Rightarrow> 'a list \<Rightarrow> 'p" where
+  "general_parallel _ [] = \<zero>" |
+  "general_parallel P (v # vs) = P v \<parallel> general_parallel P vs"
 
 text \<open>
   We define a notation for repeated parallel composition combined with mapping. Since this notation
@@ -118,180 +64,10 @@ no_syntax
   "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
-  "_GeneralParallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-
-end
-
-subsection \<open>Typed Processes\<close>
-
-definition
-  typed_stop :: "process"
-where
-  [simp]: "typed_stop = Stop"
-definition
-  typed_send :: "'a channel \<Rightarrow> 'a::embeddable \<Rightarrow> process"
-where
-  [simp]: "typed_send a x = Send (untyped a) (encode x)"
-definition
-  typed_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
-where
-  [simp]: "typed_receive a P = Receive (untyped a) (\<lambda>x. P (decode x))"
-definition
-  typed_parallel :: "process \<Rightarrow> process \<Rightarrow> process"
-where
-  [simp]: "typed_parallel p q = Parallel p q"
-definition
-  typed_new_channel :: "('a channel \<Rightarrow> process) \<Rightarrow> process"
-where
-  [simp]: "typed_new_channel P = NewChannel (\<lambda>a. P (typed a))"
-definition
-  typed_repeated_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
-where
-  [simp]: "typed_repeated_receive a P = RepeatedReceive (untyped a) (\<lambda>x. P (decode x))"
-definition
-  typed_guard :: "bool \<Rightarrow> process \<Rightarrow> process"
-where
-  [simp]: "typed_guard v p = Guard v p"
-definition
-  typed_general_parallel :: "('a \<Rightarrow> process) \<Rightarrow> 'a list \<Rightarrow> process"
-where
-  [simp]: "typed_general_parallel P vs = GeneralParallel P vs"
-
-syntax
-  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-translations
-  "a \<triangleright> x. p" \<rightleftharpoons> "CONST typed_receive a (\<lambda>x. p)"
-print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax typed_receive} @{syntax_const "_typed_receive"}]
-\<close>
-no_syntax
-  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-
-syntax
-  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-translations
-  "a \<triangleright>\<^sup>\<infinity> x. p" \<rightleftharpoons> "CONST typed_repeated_receive a (\<lambda>x. p)"
-print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax typed_repeated_receive} @{syntax_const "_typed_repeated_receive"}]
-\<close>
-no_syntax
-  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-syntax
-  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
+  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'p \<Rightarrow> 'p"
   (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "_typed_general_parallel v vs p" \<rightleftharpoons> "CONST typed_general_parallel (\<lambda>v. p) vs"
-print_translation \<open>
-  [
-    preserve_binder_abs_general_parallel_tr'
-      @{const_syntax typed_general_parallel}
-      @{syntax_const "_typed_general_parallel"}
-  ]
-\<close>
-no_syntax
-  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process\<Rightarrow> process"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-
-bundle typed_process_syntax
-begin
-
-notation typed_stop (\<open>\<zero>\<close>)
-
-notation typed_send (infix \<open>\<triangleleft>\<close> 52)
-
-syntax
-  "_typed_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-
-notation typed_parallel (infixr \<open>\<parallel>\<close> 51)
-
-notation typed_new_channel (binder \<open>\<nu> \<close> 52)
-
-syntax
-  "_typed_repeated_receive" :: "'a channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-notation typed_guard (infixr \<open>?\<close> 52)
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
-
-syntax
-  "_typed_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process \<Rightarrow> process"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-
-end
-
-subsection \<open>Process Families\<close>
-
-definition
-  stop :: "process family"
-where
-  [simp]: "stop = (\<lambda>_. Stop)"
-definition
-  send :: "chan family \<Rightarrow> val family \<Rightarrow> process family"
-where
-  [simp]: "send A X = (\<lambda>e. Send (A e) (X e))"
-definition
-  receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
-where
-  [simp]: "receive A \<P> = (\<lambda>e. Receive (A e) (\<lambda>x. \<P> x e))"
-definition
-  parallel :: "process family \<Rightarrow> process family \<Rightarrow> process family"
-where
-  [simp]: "parallel P Q = (\<lambda>e. Parallel (P e) (Q e))"
-definition
-  new_channel :: "(chan \<Rightarrow> process family) \<Rightarrow> process family"
-where
-  [simp]: "new_channel \<P> = (\<lambda>e. NewChannel (\<lambda>a. \<P> a e))"
-definition
-  repeated_receive :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
-where
-  [simp]: "repeated_receive A \<P> = (\<lambda>e. RepeatedReceive (A e) (\<lambda>x. \<P> x e))"
-definition
-  guard :: "bool \<Rightarrow> process family \<Rightarrow> process family"
-where
-  [simp]: "guard v P = (\<lambda>e. Guard v (P e))"
-definition
-  general_parallel :: "('a \<Rightarrow> process family) \<Rightarrow> 'a list \<Rightarrow> process family"
-where
-  [simp]: "general_parallel \<P> vs = (\<lambda>e. GeneralParallel (\<lambda>v. \<P> v e) vs)"
-
-syntax
-  "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-translations
-  "A \<triangleright> x. P" \<rightleftharpoons> "CONST receive A (\<lambda>x. P)"
-print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax receive} @{syntax_const "_receive"}]
-\<close>
-no_syntax
-  "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-
-syntax
-  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-translations
-  "A \<triangleright>\<^sup>\<infinity> x. P" \<rightleftharpoons> "CONST repeated_receive A (\<lambda>x. P)"
-print_translation \<open>
-  [preserve_binder_abs_receive_tr' @{const_syntax repeated_receive} @{syntax_const "_repeated_receive"}]
-\<close>
-no_syntax
-  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-translations
-  "_general_parallel v vs P" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. P) vs"
+  "_general_parallel v vs p" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. p) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
@@ -299,56 +75,122 @@ print_translation \<open>
       @{syntax_const "_general_parallel"}
   ]
 \<close>
-no_syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 
-bundle process_family_syntax
-begin
-
-notation stop (\<open>\<zero>\<close>)
-
-notation send (infix \<open>\<triangleleft>\<close> 52)
-
-syntax
-  "_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright> _./ _)\<close> [53, 0, 52] 52)
-
-notation parallel (infixr \<open>\<parallel>\<close> 51)
-
-notation new_channel (binder \<open>\<nu> \<close> 52)
-
-syntax
-  "_repeated_receive" :: "chan family \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3_ \<triangleright>\<^sup>\<infinity> _./ _)\<close> [53, 0, 52] 52)
-
-notation guard (infixr \<open>?\<close> 52)
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
-
-syntax
-  "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> process family \<Rightarrow> process family"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
-
-end
+lemma general_parallel_conversion_deferral:
+  shows "\<Prod>w \<leftarrow> map f vs. P w = \<Prod>v \<leftarrow> vs. P (f v)"
+  by (induction vs) (simp_all only: general_parallel.simps list.map)
 
 (* FIXME: Mention that \<open>\<circ>\<close> binds stronger than all the above operators and binders. *)
 
-unbundle process_family_syntax
+subsection \<open>Plain Processes\<close>
 
-lemma repeated_receive_unfolding:
+codatatype process =
+  Stop |
+  Send \<open>chan\<close> \<open>val\<close> |
+  Receive \<open>chan\<close> \<open>val \<Rightarrow> process\<close> |
+  Parallel \<open>process\<close> \<open>process\<close> |
+  NewChannel \<open>chan \<Rightarrow> process\<close>
+
+overloading
+  plain_stop \<equiv> "stop :: process"
+  plain_send \<equiv> "send :: chan \<Rightarrow> val \<Rightarrow> process"
+  plain_receive \<equiv> "receive :: chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process"
+  plain_parallel \<equiv> "parallel :: process \<Rightarrow> process \<Rightarrow> process"
+  plain_new_channel \<equiv> "new_channel :: (chan \<Rightarrow> process) \<Rightarrow> process"
+  plain_repeated_receive \<equiv> "repeated_receive :: chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process"
+begin
+
+definition plain_stop :: process where
+  [simp]: "plain_stop = Stop"
+
+definition plain_send :: "chan \<Rightarrow> val \<Rightarrow> process" where
+  [simp]: "plain_send a x = Send a x"
+
+definition plain_receive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process" where
+  [simp]: "plain_receive a P = Receive a P"
+
+definition plain_parallel :: "process \<Rightarrow> process \<Rightarrow> process" where
+  [simp]: "plain_parallel p q = Parallel p q"
+
+definition plain_new_channel :: "(chan \<Rightarrow> process) \<Rightarrow> process" where
+  [simp]: "plain_new_channel P = NewChannel P"
+
+corec plain_repeated_receive :: "chan \<Rightarrow> (val \<Rightarrow> process) \<Rightarrow> process" where
+  "plain_repeated_receive a P = Receive a (\<lambda>x. Parallel (P x) (plain_repeated_receive a P))"
+
+end
+
+lemma plain_repeated_receive_expansion:
+  fixes a :: chan and P :: "val \<Rightarrow> process"
+  shows "a \<triangleright>\<^sup>\<infinity> x. P x = a \<triangleright> x. (P x \<parallel> a \<triangleright>\<^sup>\<infinity> x. P x)"
+  unfolding plain_receive_def and plain_parallel_def
+  by (subst plain_repeated_receive.code) standard
+
+subsection \<open>Typed Processes\<close>
+
+overloading
+  typed_send \<equiv> "send :: 'a channel \<Rightarrow> 'a::embeddable \<Rightarrow> process"
+  typed_receive \<equiv> "receive :: 'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
+  typed_new_channel \<equiv> "new_channel :: ('a channel \<Rightarrow> process) \<Rightarrow> process"
+  typed_repeated_receive \<equiv> "repeated_receive :: 'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
+begin
+
+definition typed_send :: "'a channel \<Rightarrow> 'a::embeddable \<Rightarrow> process" where
+  [simp]: "typed_send a x = untyped a \<triangleleft> encode x"
+
+definition typed_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process" where
+  [simp]: "typed_receive a P = untyped a \<triangleright> x. P (decode x)"
+
+definition typed_new_channel :: "('a channel \<Rightarrow> process) \<Rightarrow> process" where
+  [simp]: "typed_new_channel P = \<nu> a. P (typed a)"
+
+definition typed_repeated_receive :: "'a channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process" where
+  [simp]: "typed_repeated_receive a P = untyped a \<triangleright>\<^sup>\<infinity> x. P (decode x)"
+
+end
+
+lemma typed_repeated_receive_expansion:
+  fixes a :: "'a::embeddable channel" and P :: "'a \<Rightarrow> process"
+  shows "a \<triangleright>\<^sup>\<infinity> x. P x = a \<triangleright> x. (P x \<parallel> a \<triangleright>\<^sup>\<infinity> x. P x)"
+  unfolding typed_repeated_receive_def and typed_receive_def
+  by (subst plain_repeated_receive_expansion) standard
+
+subsection \<open>Process Families\<close>
+
+overloading
+  stop_family \<equiv> "stop :: process family"
+  send_family \<equiv> "send :: chan family \<Rightarrow> val family \<Rightarrow> process family"
+  receive_family \<equiv> "receive :: chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
+  parallel_family \<equiv> "parallel :: process family \<Rightarrow> process family \<Rightarrow> process family"
+  new_channel_family \<equiv> "new_channel :: (chan \<Rightarrow> process family) \<Rightarrow> process family"
+  repeated_receive_family \<equiv> "repeated_receive :: chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family"
+begin
+
+definition stop_family :: "process family" where
+  [simp]: "stop_family = (\<lambda>_. \<zero>)"
+
+definition send_family :: "chan family \<Rightarrow> val family \<Rightarrow> process family" where
+  [simp]: "send_family A X = (\<lambda>e. A e \<triangleleft> X e)"
+
+definition receive_family :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
+  [simp]: "receive_family A \<P> = (\<lambda>e. A e \<triangleright> x. \<P> x e)"
+
+definition parallel_family :: "process family \<Rightarrow> process family \<Rightarrow> process family" where
+  [simp]: "parallel_family P Q = (\<lambda>e. P e \<parallel> Q e)"
+
+definition new_channel_family :: "(chan \<Rightarrow> process family) \<Rightarrow> process family" where
+  [simp]: "new_channel_family \<P> = (\<lambda>e. \<nu> a. \<P> a e)"
+
+definition repeated_receive_family :: "chan family \<Rightarrow> (val \<Rightarrow> process family) \<Rightarrow> process family" where
+  [simp]: "repeated_receive_family A \<P> = (\<lambda>e. A e \<triangleright>\<^sup>\<infinity> x. \<P> x e)"
+
+end
+
+lemma repeated_receive_family_expansion:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> process family"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x = A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
-  unfolding repeated_receive_def and receive_def and parallel_def
-  by (subst RepeatedReceive.code) standard
-
-lemma general_parallel_nil_unfolding:
-  shows "\<Prod>w \<leftarrow> []. \<P> w = \<zero>"
-  unfolding general_parallel_def and stop_def and GeneralParallel.simps(1) ..
-
-lemma general_parallel_cons_unfolding:
-  shows "\<Prod>w \<leftarrow> v # vs. \<P> w = \<P> v \<parallel> \<Prod>w \<leftarrow> vs. \<P> w"
-  unfolding general_parallel_def and parallel_def and GeneralParallel.simps(2) ..
+  unfolding repeated_receive_family_def and receive_family_def and parallel_family_def
+  by (subst plain_repeated_receive_expansion) standard
 
 definition create_channel :: "process family \<Rightarrow> process family" (\<open>\<star>\<close>) where
   [simp]: "\<star> = new_channel \<circ> \<Delta>"
@@ -383,10 +225,20 @@ definition tagged_create_channel :: "nat \<Rightarrow> process family \<Rightarr
 *)
 
 lemma process_family_distinctnesses [induct_simp]:
-  shows
-    "\<zero> \<noteq> A \<triangleleft> X"
+  fixes
+    A B :: "chan family"
   and
-    "A \<triangleleft> X \<noteq> \<zero>"
+    X :: "val family"
+  and
+    P Q :: "process family"
+  and
+    \<P> :: "val \<Rightarrow> process family"
+  and
+    \<Q> :: "chan \<Rightarrow> process family"
+  shows
+    "(\<zero> :: process family) \<noteq> A \<triangleleft> X"
+  and
+    "(A \<triangleleft> X :: process family) \<noteq> \<zero>"
   and
     "\<zero> \<noteq> A \<triangleright> x. \<P> x"
   and
@@ -432,8 +284,18 @@ text \<open>
 \<close>
 
 lemma process_family_injectivities [induct_simp]:
+  fixes
+    A\<^sub>1 A\<^sub>2 :: "chan family"
+  and
+    X\<^sub>1 X\<^sub>2 :: "val family"
+  and
+    P\<^sub>1 P\<^sub>2 Q\<^sub>1 Q\<^sub>2 :: "process family"
+  and
+    \<P>\<^sub>1 \<P>\<^sub>2 :: "val \<Rightarrow> process family"
+  and
+    \<Q>\<^sub>1 \<Q>\<^sub>2 :: "chan \<Rightarrow> process family"
   shows
-    "A\<^sub>1 \<triangleleft> X\<^sub>1 = A\<^sub>2 \<triangleleft> X\<^sub>2 \<longleftrightarrow> A\<^sub>1 = A\<^sub>2 \<and> X\<^sub>1 = X\<^sub>2"
+    "(A\<^sub>1 \<triangleleft> X\<^sub>1 :: process family) = A\<^sub>2 \<triangleleft> X\<^sub>2 \<longleftrightarrow> A\<^sub>1 = A\<^sub>2 \<and> X\<^sub>1 = X\<^sub>2"
   and
     "A\<^sub>1 \<triangleright> x. \<P>\<^sub>1 x = A\<^sub>2 \<triangleright> x. \<P>\<^sub>2 x \<longleftrightarrow> A\<^sub>1 = A\<^sub>2 \<and> \<P>\<^sub>1 = \<P>\<^sub>2"
   and
@@ -448,32 +310,40 @@ text \<open>
 \<close>
 
 lemma family_uncurry_after_stop:
-  shows "\<nabla> (\<lambda>_. \<zero>) = \<zero>"
+  shows "(\<nabla> (\<lambda>_. \<zero>) :: process family) = \<zero>"
   by simp
 
 lemma family_uncurry_after_send:
-  shows "\<nabla> (\<lambda>b. \<A> b \<triangleleft> \<X> b) = \<nabla> \<A> \<triangleleft> \<nabla> \<X>"
+  fixes \<A> :: "chan \<Rightarrow> chan family" and \<X> :: "chan \<Rightarrow> val family"
+  shows "(\<nabla> (\<lambda>b. \<A> b \<triangleleft> \<X> b) :: process family) = \<nabla> \<A> \<triangleleft> \<nabla> \<X>"
   by simp
 
 lemma family_uncurry_after_receive:
+  fixes \<A> :: "chan \<Rightarrow> chan family" and \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nabla> (\<lambda>b. \<A> b \<triangleright> x. \<P> x b) = \<nabla> \<A> \<triangleright> x. \<nabla> (\<P> x)"
   by simp
 
 lemma family_uncurry_after_parallel:
+  fixes \<P> \<Q> :: "chan \<Rightarrow> process family"
   shows "\<nabla> (\<lambda>a. \<P> a \<parallel> \<Q> a) = \<nabla> \<P> \<parallel> \<nabla> \<Q>"
   by simp
 
 lemma family_uncurry_after_new_channel:
+  fixes \<P> :: "chan \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nabla> (\<lambda>a. \<nu> b. \<P> a b) = \<nu> b. \<nabla> (\<lambda>a. \<P> a b)"
   by simp
 
 lemma family_uncurry_after_repeated_receive:
+  fixes \<A> :: "chan \<Rightarrow> chan family" and \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nabla> (\<lambda>b. \<A> b \<triangleright>\<^sup>\<infinity> x. \<P> x b) = \<nabla> \<A> \<triangleright>\<^sup>\<infinity> x. \<nabla> (\<P> x)"
   by simp
 
 lemma family_uncurry_after_general_parallel:
+  fixes \<P> :: "'a \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
-  by simp
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
 
 text \<open>
   The following trivially provable lemmas are stated, because two of them are used by the
@@ -481,10 +351,12 @@ text \<open>
 \<close>
 
 lemma deep_uncurry_after_parallel:
+  fixes \<P> \<Q> :: "chan \<Rightarrow> process family"
   shows "\<nabla>\<^bsub>i\<^esub> (\<lambda>a. \<P> a \<parallel> \<Q> a) = \<nabla>\<^bsub>i\<^esub> \<P> \<parallel> \<nabla>\<^bsub>i\<^esub> \<Q>"
   by simp
 
 lemma deep_uncurry_after_new_channel:
+  fixes \<P> :: "chan \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nabla>\<^bsub>i\<^esub> (\<lambda>a. \<nu> b. \<P> a b) = \<nu> b. \<nabla>\<^bsub>i\<^esub> (\<lambda>a. \<P> a b)"
   by simp
 
@@ -493,36 +365,45 @@ lemma deep_uncurry_after_create_channel:
   by simp
 
 lemma adapted_after_stop:
-  shows "\<zero> \<guillemotleft> \<E> = \<zero>"
+  shows "(\<zero> \<guillemotleft> \<E> :: process family) = \<zero>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_send:
-  shows "(A \<triangleleft> X) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleleft> X \<guillemotleft> \<E>"
+  fixes A :: "chan family" and X :: "val family"
+  shows "((A \<triangleleft> X) \<guillemotleft> \<E> :: process family) = A \<guillemotleft> \<E> \<triangleleft> X \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_receive:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> process family"
   shows "(A \<triangleright> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright> x. \<P> x \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_parallel:
+  fixes P Q :: "process family"
   shows "(P \<parallel> Q) \<guillemotleft> \<E> = P \<guillemotleft> \<E> \<parallel> Q \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_new_channel:
+  fixes \<Q> :: "chan \<Rightarrow> process family"
   shows "(\<nu> a. \<Q> a) \<guillemotleft> \<E> = \<nu> a. \<Q> a \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_repeated_receive:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> process family"
   shows "(A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> \<E> = A \<guillemotleft> \<E> \<triangleright>\<^sup>\<infinity> x. \<P> x \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_guard:
+  fixes P :: "process family"
   shows "(v ? P) \<guillemotleft> \<E> = v ? P \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_general_parallel:
+  fixes \<P> :: "'a \<Rightarrow> process family"
   shows "(\<Prod>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Prod>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
-  by transfer (simp add: comp_def)
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps adapted_after_stop adapted_after_parallel)
 
 lemma adapted_after_create_channel:
   shows "\<star> P \<guillemotleft> \<E> = \<star> (P \<guillemotleft> on_tail \<E>)"
@@ -569,19 +450,21 @@ text \<open>
 *)
 
 lemma stop_and_adapted:
+  fixes S :: "process family"
   assumes "\<zero> = S \<guillemotleft> \<E>"
   shows "S = \<zero>"
   using adapted_undo and assms
-  unfolding stop_def
+  unfolding stop_family_def
   by (metis comp_def)
 
 lemma send_and_adapted:
+  fixes A' :: "chan family" and X' :: "val family" and S :: "process family"
   assumes "A' \<triangleleft> X' = S \<guillemotleft> \<E>"
   obtains A and X where "A' = A \<guillemotleft> \<E>" and "X' = X \<guillemotleft> \<E>" and "S = A \<triangleleft> X"
 proof -
   from assms have S_definition: "S = A' \<circ> inv \<lfloor>\<E>\<rfloor> \<triangleleft> X' \<circ> inv \<lfloor>\<E>\<rfloor>"
     using adapted_undo
-    unfolding send_def
+    unfolding send_family_def
     by (metis comp_def)
   moreover
   from assms [symmetric] and S_definition have "A' = A' \<circ> inv \<lfloor>\<E>\<rfloor> \<guillemotleft> \<E>" and "X' = X' \<circ> inv \<lfloor>\<E>\<rfloor> \<guillemotleft> \<E>"
@@ -592,13 +475,14 @@ proof -
 qed
 
 lemma receive_and_adapted:
+  fixes A' :: "chan family" and \<P>' :: "val \<Rightarrow> process family"
   assumes "A' \<triangleright> x. \<P>' x = S \<guillemotleft> \<E>"
   obtains A and \<P> where "A' = A \<guillemotleft> \<E>" and "\<P>' = (\<lambda>x. \<P> x \<guillemotleft> \<E>)" and "S = A \<triangleright> x. \<P> x"
 proof -
   have "S = S \<guillemotleft> \<E> \<circ> inv \<lfloor>\<E>\<rfloor>"
     by (simp only: adapted_undo)
   also have "\<dots> = A' \<circ> inv \<lfloor>\<E>\<rfloor> \<triangleright> x. \<P>' x \<circ> inv \<lfloor>\<E>\<rfloor>"
-    by (simp only: assms [symmetric] receive_def comp_def)
+    by (simp only: assms [symmetric] receive_family_def comp_def)
   finally have S_definition: "S = A' \<circ> inv \<lfloor>\<E>\<rfloor> \<triangleright> x. \<P>' x \<circ> inv \<lfloor>\<E>\<rfloor>" .
   moreover
   from assms [symmetric] and S_definition
@@ -610,12 +494,13 @@ proof -
 qed
 
 lemma parallel_and_adapted:
+  fixes P' Q' :: "process family"
   assumes "P' \<parallel> Q' = S \<guillemotleft> \<E>"
   obtains P and Q where "P' = P \<guillemotleft> \<E>" and "Q' = Q \<guillemotleft> \<E>" and "S = P \<parallel> Q"
 proof -
   from assms have S_definition: "S = P' \<circ> inv \<lfloor>\<E>\<rfloor> \<parallel> Q' \<circ> inv \<lfloor>\<E>\<rfloor>"
     using adapted_undo
-    unfolding parallel_def
+    unfolding parallel_family_def
     by (metis comp_def)
   moreover
   from assms [symmetric] and S_definition have "P' = P' \<circ> inv \<lfloor>\<E>\<rfloor> \<guillemotleft> \<E>" and "Q' = Q' \<circ> inv \<lfloor>\<E>\<rfloor> \<guillemotleft> \<E>"
@@ -626,13 +511,14 @@ proof -
 qed
 
 lemma new_channel_and_adapted:
+  fixes \<P>' :: "chan \<Rightarrow> process family"
   assumes "\<nu> a. \<P>' a = S \<guillemotleft> \<E>"
   obtains \<P> where "\<P>' = (\<lambda>a. \<P> a \<guillemotleft> \<E>)" and "S = \<nu> a. \<P> a"
 proof -
   have "S = S \<guillemotleft> \<E> \<circ> inv \<lfloor>\<E>\<rfloor>"
     by (simp only: adapted_undo)
   also have "\<dots> = \<nu> a. \<P>' a \<circ> inv \<lfloor>\<E>\<rfloor>"
-    by (simp only: assms [symmetric] new_channel_def comp_def)
+    by (simp only: assms [symmetric] new_channel_family_def comp_def)
   finally have S_definition: "S = \<nu> a. \<P>' a \<circ> inv \<lfloor>\<E>\<rfloor>" .
   moreover
   from assms [symmetric] and S_definition have "\<P>' = (\<lambda>a. \<P>' a \<circ> inv \<lfloor>\<E>\<rfloor> \<guillemotleft> \<E>)"
@@ -659,16 +545,19 @@ qed
 *)
 
 lemma environment_dependent_send:
-  shows "(\<lambda>e. (\<A> e \<triangleleft> \<X> e) e) = (\<lambda>e. \<A> e e) \<triangleleft> (\<lambda>e. \<X> e e)"
-  by (simp only: send_def)
+  fixes \<A> :: "chan stream \<Rightarrow> chan family" and \<X> :: "chan stream \<Rightarrow> val family"
+  shows "((\<lambda>e. (\<A> e \<triangleleft> \<X> e) e) :: process family) = (\<lambda>e. \<A> e e) \<triangleleft> (\<lambda>e. \<X> e e)"
+  by (simp only: send_family_def)
 
 lemma environment_dependent_receive:
+  fixes \<A> :: "chan stream \<Rightarrow> chan family" and \<P> :: "val \<Rightarrow> chan stream \<Rightarrow> process family"
   shows "(\<lambda>e. (\<A> e \<triangleright> x. \<P> x e) e) = (\<lambda>e. \<A> e e) \<triangleright> x. (\<lambda>e. \<P> x e e)"
-  by (simp only: receive_def)
+  by (simp only: receive_family_def)
 
 lemma environment_dependent_parallel:
+  fixes \<P> \<Q> :: "chan stream \<Rightarrow> process family"
   shows "(\<lambda>e. (\<P> e \<parallel> \<Q> e) e) = (\<lambda>e. \<P> e e) \<parallel> (\<lambda>e. \<Q> e e)"
-  by (simp only: parallel_def)
+  by (simp only: parallel_family_def)
 
 (*FIXME:
   Perhaps we should add \<^theory_text>\<open>environment_dependent_new_channel\<close>, if only for completeness.
@@ -677,19 +566,23 @@ lemma environment_dependent_parallel:
 (*FIXME: Perhaps add \<^theory_text>\<open>environment_dependent_guard\<close>.*)
 
 lemma environment_dependent_general_parallel:
+  fixes \<P> :: "'a \<Rightarrow> chan stream \<Rightarrow> process family"
   shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
-  by (simp only: general_parallel_def)
+proof (induction vs)
+  case Nil
+  show ?case
+    by (simp only: general_parallel.simps(1))
+next
+  case Cons
+  then show ?case
+    unfolding general_parallel.simps(2)
+    by (subst environment_dependent_parallel, simp only:)
+qed
 
 (*FIXME:
   Perhaps add \<^theory_text>\<open>environment_dependent\<close> lemmas also for higher-level constructs like the ones from
   \<^theory_text>\<open>Thorn_Calculus-Communication\<close>.
 *)
-
-lemma general_parallel_conversion_deferral:
-  shows "\<Prod>w \<leftarrow> map f vs. \<P> w = \<Prod>v \<leftarrow> vs. \<P> (f v)"
-  by
-    (induction vs)
-    (simp_all only: list.map general_parallel_nil_unfolding general_parallel_cons_unfolding)
 
 text \<open>
   \<^theory_text>\<open>de_bruijn\<close> expects there to be no chained facts. With chained facts present, there would be two

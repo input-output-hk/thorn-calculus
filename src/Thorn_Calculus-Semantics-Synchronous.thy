@@ -38,34 +38,40 @@ proof -
 qed
 
 lemma post_receive_after_stop:
-  shows "post_receive n X (\<lambda>_. \<zero>) = \<zero>"
+  shows "(post_receive n X (\<lambda>_. \<zero>) :: process family) = \<zero>"
   unfolding post_receive_def and adapted_after_stop
   using refl .
 
 lemma post_receive_after_send:
-  shows "post_receive n X (\<lambda>x. \<A> x \<triangleleft> \<Y> x) = post_receive n X \<A> \<triangleleft> post_receive n X \<Y>"
+  fixes \<A> :: "val \<Rightarrow> chan family" and \<Y> :: "val \<Rightarrow> val family"
+  shows "(post_receive n X (\<lambda>x. \<A> x \<triangleleft> \<Y> x) :: process family) = post_receive n X \<A> \<triangleleft> post_receive n X \<Y>"
   unfolding post_receive_def and adapted_after_send
-  by (simp only: send_def)
+  by (simp only: send_family_def)
 
 lemma post_receive_after_receive:
+  fixes \<A> :: "val \<Rightarrow> chan family" and \<P> :: "val \<Rightarrow> val \<Rightarrow> process family"
   shows "post_receive n X (\<lambda>x. \<A> x \<triangleright> y. \<P> x y) = post_receive n X \<A> \<triangleright> y. post_receive n X (\<lambda>x. \<P> x y)"
   unfolding post_receive_def and adapted_after_receive
-  by (simp only: receive_def)
+  by (simp only: receive_family_def)
 
 lemma post_receive_after_parallel:
+  fixes \<P> \<Q> :: "val \<Rightarrow> process family"
   shows "post_receive n X (\<lambda>x. \<P> x \<parallel> \<Q> x) = post_receive n X \<P> \<parallel> post_receive n X \<Q>"
   unfolding post_receive_def and adapted_after_parallel
-  by (simp only: parallel_def)
+  by (simp only: parallel_family_def)
 
 lemma post_receive_after_general_parallel:
+  fixes \<P> :: "'a \<Rightarrow> val \<Rightarrow> process family"
   shows "post_receive n X (\<lambda>x. \<Prod>v \<leftarrow> vs. \<P> v x) = \<Prod>v \<leftarrow> vs. post_receive n X (\<P> v)"
-  unfolding post_receive_def and adapted_after_general_parallel
-  by (simp only: general_parallel_def)
+  by
+    (induction vs)
+    (simp_all only: general_parallel.simps post_receive_after_stop post_receive_after_parallel)
 
 lemma post_receive_after_new_channel:
+  fixes \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
   shows "post_receive n X (\<lambda>x. \<nu> a. \<P> x a) = \<nu> a. post_receive n X (\<lambda>x. \<P> x a)"
   unfolding post_receive_def and adapted_after_new_channel
-  by (simp only: new_channel_def)
+  by (simp only: new_channel_family_def)
 
 definition
   receive_continuation_lifting :: "process family relation \<Rightarrow> (val \<Rightarrow> process family) relation"
@@ -166,7 +172,7 @@ lemma no_mobility_new_channel_io:
 lemma repeated_receive_transition:
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> post_receive n X \<P> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n"
   using receiving [where \<P> = "\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x", unfolded post_receive_after_parallel]
-  by (subst repeated_receive_unfolding) (unfold post_receive_def)
+  by (subst repeated_receive_family_expansion) (unfold post_receive_def)
 
 lemma transition_from_repeated_receive:
   assumes "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> Q"
@@ -175,7 +181,7 @@ proof -
   obtain n and X where "\<alpha> = A \<triangleright>\<^bsub>n\<^esub> X" and "Q = post_receive n X (\<lambda>x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)"
     by
       (
-        use assms in \<open>subst (asm) (2) repeated_receive_unfolding\<close>,
+        use assms in \<open>subst (asm) (2) repeated_receive_family_expansion\<close>,
         cases \<alpha> "A \<triangleright> x. (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x)" Q rule: synchronous_transition.cases
       )
   with that show ?thesis
@@ -1690,7 +1696,7 @@ private lemma unilateral_original_or_receive_progression:
 proof -
   have "\<exists>T. A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>\<alpha>\<rparr> T \<and> K S T"
     if "K\<^sup>\<sharp> \<P> \<Q>" and "A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S"
-    for \<alpha> and A and \<P> and \<Q> and S
+    for \<alpha> and A :: "chan family" and \<P> and \<Q> and S
   using \<open>A \<triangleright> x. \<P> x \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close> proof cases
     case (receiving n X)
     have "A \<triangleright> x. \<Q> x \<rightharpoondown>\<lparr>A \<triangleright>\<^bsub>n\<^esub> X\<rparr> post_receive n X \<Q>"
@@ -1864,6 +1870,7 @@ declare bisimilarity_is_equivalence [equivalence]
 *)
 
 lemma receive_is_quasi_compatible_with_bisimilarity:
+  fixes A :: "chan family"
   assumes "(\<sim>)\<^sup>\<sharp> \<P> \<Q>"
   shows "A \<triangleright> x. \<P> x \<sim> A \<triangleright> x. \<Q> x"
   using mutant_and_receive_lifted_bisimilarity_in_bisimilarity and assms
