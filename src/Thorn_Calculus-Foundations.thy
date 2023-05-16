@@ -980,18 +980,7 @@ qed
 
 lemma dependent_on_chan_at_after_source_anchored_move_adapted:
   shows "dependent_on_chan_at i (V \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at j V"
-proof -
-  have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>j\<^esub> V"
-  proof -
-    have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>i\<^esub> (\<nabla>\<^bsub>i\<^esub> (\<Delta>\<^bsub>j\<^esub> V))"
-      by transfer simp
-    also have "\<dots> = \<Delta>\<^bsub>j\<^esub> V"
-      by (simp only: deep_curry_after_deep_uncurry pointfree_idE)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
+  by (simp only: source_curry_after_move_adapted dependent_on_chan_at_def)
 
 lemma dependent_on_chan_at_after_move_within_prefix_adapted:
   assumes "i < n" and "j < n"
