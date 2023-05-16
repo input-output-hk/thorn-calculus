@@ -6,6 +6,7 @@ named_theorems thorn_simps
 (*FIXME: Don't name this \<^theory_text>\<open>thorn_simps\<close>, as \<^theory_text>\<open>simps\<close> alsways stands for equalities. *)
 
 lemma receive_scope_extension [thorn_simps]:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
   shows "A \<triangleright> x. \<nu> b. \<P> x b \<sim>\<^sub>s \<nu> b. A \<triangleright> x. \<P> x b"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s]"])
   case (forward_simulation \<alpha> S)
@@ -85,11 +86,13 @@ next
 qed respectful
 
 lemma tagged_receive_scope_extension [thorn_simps]:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
   shows "A \<triangleright> x. \<langle>t\<rangle> \<nu> b. \<P> x b \<sim>\<^sub>s \<langle>t\<rangle> \<nu> b. A \<triangleright> x. \<P> x b"
   unfolding tagged_new_channel_def
   using receive_scope_extension .
 
 lemma new_channel_scope_extension [thorn_simps]:
+  fixes \<P> :: "chan \<Rightarrow> chan \<Rightarrow> process family"
   shows "\<nu> a. \<nu> b. \<P> a b \<sim>\<^sub>s \<nu> b. \<nu> a. \<P> a b"
 proof (coinduction arbitrary: \<P> rule: synchronous.symmetric_up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<squnion> id"])
   case (simulation \<alpha> S \<P>)
@@ -597,6 +600,7 @@ proof -
 qed
 
 lemma parallel_left_scope_extension [thorn_simps]:
+  fixes \<P> :: "chan \<Rightarrow> process family"
   shows "\<nu> a. \<P> a \<parallel> Q \<sim>\<^sub>s \<nu> a. (\<P> a \<parallel> Q)"
 proof (coinduction arbitrary: \<P> Q rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<squnion> (\<M> \<frown> [\<sim>\<^sub>s])"])
   case (forward_simulation \<alpha> S \<P> Q)
@@ -1052,6 +1056,7 @@ lemma tagged_parallel_left_scope_extension [thorn_simps]:
   using parallel_left_scope_extension .
 
 lemma parallel_right_scope_extension [thorn_simps]:
+  fixes \<Q> :: "chan \<Rightarrow> process family"
   shows "P \<parallel> \<nu> a. \<Q> a \<sim>\<^sub>s \<nu> a. (P \<parallel> \<Q> a)"
 proof -
   have "P \<parallel> \<nu> a. \<Q> a \<sim>\<^sub>s \<nu> a. \<Q> a \<parallel> P"
@@ -1295,7 +1300,7 @@ qed
 context begin
 
 private lemma stop_scope_redundancy:
-  shows "\<nu> _. \<zero> \<sim>\<^sub>s \<zero>"
+  shows "\<nu> _ :: chan. \<zero> \<sim>\<^sub>s \<zero>"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = \<bottom>])
   case (forward_simulation \<alpha> S)
   from \<open>\<nu> _. \<zero> \<rightarrow>\<^sub>s\<lparr>\<alpha>\<rparr> S\<close> show ?case
@@ -1319,12 +1324,12 @@ next
 qed respectful
 
 lemma scope_redundancy [thorn_simps]:
-  shows "\<nu> _. P \<sim>\<^sub>s P"
+  shows "\<nu> _ :: chan. P \<sim>\<^sub>s P"
 proof -
-  have "\<nu> _. P \<sim>\<^sub>s \<nu> _. (\<zero> \<parallel> P)"
+  have "\<nu> _ :: chan. P \<sim>\<^sub>s \<nu> _ :: chan. (\<zero> \<parallel> P)"
     using parallel_left_identity
     by process_family_equivalence
-  also have "\<dots> \<sim>\<^sub>s \<nu> _. \<zero> \<parallel> P"
+  also have "\<dots> \<sim>\<^sub>s \<nu> _ :: chan. \<zero> \<parallel> P"
     using parallel_left_scope_extension
     by process_family_equivalence
   also have "\<dots> \<sim>\<^sub>s \<zero> \<parallel> P"
@@ -1372,6 +1377,7 @@ private lemma right_amended_double_suffix_adapted:
   using parallel_left_commutativity .
 
 lemma repeated_receive_idempotency [thorn_simps]:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> process family"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M>"])
   case (forward_simulation \<alpha> S)
@@ -1438,6 +1444,7 @@ next
 qed respectful
 
 lemma repeated_receive_nested_idempotency [thorn_simps]:
+  fixes A :: "chan family" and \<P> :: "val \<Rightarrow> process family"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q"
 proof -
   have "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> Q) \<sim>\<^sub>s (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<parallel> Q"
@@ -1450,6 +1457,7 @@ proof -
 qed
 
 private lemma with_inner_repeated_receive_post_right_receive:
+  fixes A B :: "chan family" and \<P> \<Q> :: "val \<Rightarrow> process family"
   shows "
     (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel>
     (((A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> post_receive n X \<Q>) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n)
@@ -1468,15 +1476,8 @@ proof -
   finally show ?thesis .
 qed
 
-private lemma without_inner_repeated_receive_post_right_receive:
-  shows "
-    (A \<triangleright>\<^sup>\<infinity> x. \<P> x) \<guillemotleft> suffix n \<parallel> (post_receive n X \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n)
-    \<sim>\<^sub>s
-    post_receive n X \<Q> \<parallel> (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
-  unfolding adapted_after_parallel
-  using parallel_left_commutativity .
-
 lemma inner_repeated_receive_redundancy:
+  fixes A B :: "chan family" and \<P> \<Q> :: "val \<Rightarrow> process family"
   shows "A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> B \<triangleright>\<^sup>\<infinity> y. \<Q> y"
 proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] \<frown> \<M> \<frown> [\<sim>\<^sub>s]"])
   case (forward_simulation \<alpha> S)
@@ -1515,7 +1516,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       "B' = B"
     and
       "R = post_receive n Y (\<lambda>y. A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y) \<parallel> (B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)) \<guillemotleft> suffix n"
-      by (auto elim: transition_from_repeated_receive)
+      by (fast elim: transition_from_repeated_receive)+
     have "B \<triangleright>\<^sup>\<infinity> y. \<Q> y \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr> post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
       using repeated_receive_transition .
     then have "
@@ -1537,7 +1538,7 @@ proof (coinduction rule: synchronous.up_to_rule [where \<F> = "[\<sim>\<^sub>s] 
       using
         with_inner_repeated_receive_post_right_receive
       and
-        without_inner_repeated_receive_post_right_receive [symmetric]
+        right_amended_double_suffix_adapted [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1580,7 +1581,7 @@ next
       "B' = B"
     and
       "R = post_receive n Y \<Q> \<parallel> (B \<triangleright>\<^sup>\<infinity> y. \<Q> y) \<guillemotleft> suffix n"
-      by (auto elim: transition_from_repeated_receive)
+      by (fast elim: transition_from_repeated_receive)+
     have "
       B \<triangleright>\<^sup>\<infinity> y. (A \<triangleright>\<^sup>\<infinity> x. \<P> x \<parallel> \<Q> y)
       \<rightarrow>\<^sub>s\<lparr>B \<triangleright>\<^bsub>n\<^esub> Y\<rparr>
@@ -1602,7 +1603,7 @@ next
       using
         with_inner_repeated_receive_post_right_receive
       and
-        without_inner_repeated_receive_post_right_receive [symmetric]
+        right_amended_double_suffix_adapted [symmetric]
       and
         composition_in_universe
           [OF suffix_adapted_mutation_in_universe parallel_mutation_in_universe]
@@ -1628,7 +1629,8 @@ end
     \<^item> Get rid of applications of compatibility rules whenever \<^theory_text>\<open>bisimilarity\<close> can be used instead.
 *)
 lemma inner_general_parallel_redundancy:
-  assumes "\<And>x \<Q>. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
+  fixes \<Q> :: "val \<Rightarrow> process family"
+  assumes "\<And>x \<Q> :: val \<Rightarrow> process family. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
   shows "\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
 proof (induction xs arbitrary: \<Q>)
   case Nil
