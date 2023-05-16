@@ -3,8 +3,16 @@ section \<open>Foundations\<close>
 theory "Thorn_Calculus-Foundations"
 imports
   Main
+  "ZFC_in_HOL.ZFC_Typeclasses"
   "HOL-Library.Stream"
 begin
+
+text \<open>
+  We hide the constant~\<open>\<omega>\<close> that represents the smallest transfinite ordinal to prevent clashes
+  with~\<open>\<omega>\<close> used for optional actions.
+\<close>
+
+hide_const (open) \<omega>
 
 (* FIXME: Document the following at an appropriate place:
 
@@ -33,15 +41,46 @@ begin
   constructor lemmas for different process constructors.
 *)
 
-subsection \<open>Channels and Values\<close>
+subsection \<open>Channels\<close>
 
 typedecl chan
 
 axiomatization where
-  more_than_one_chan:
+  at_least_two_channels:
     "\<exists>a b :: chan. a \<noteq> b"
+and
+  at_most_one_channel_per_zfc_set:
+    "\<exists>f :: chan \<Rightarrow> V. inj f"
 
-typedecl val
+instance chan :: embeddable
+  by standard (fact at_most_one_channel_per_zfc_set)
+
+typedef 'a channel = "UNIV :: chan set" morphisms untyped typed ..
+
+instance channel :: (type) embeddable
+  by standard (meson untyped_inject ex_inj inj_def)
+
+subsection \<open>Values\<close>
+
+typedef val = "UNIV :: V set" morphisms to_zfc_set from_zfc_set ..
+
+instance val :: embeddable
+  by standard (meson to_zfc_set_inject inj_def)
+
+definition encode :: "'a::embeddable \<Rightarrow> val" where
+  [simp]: "encode = (SOME f. inj f)"
+
+lemma encode_injectivity:
+  shows "inj encode"
+proof -
+  have "\<exists>f :: 'a::embeddable \<Rightarrow> val. inj f"
+    by (meson ex_inj from_zfc_set_inject [OF UNIV_I UNIV_I] inj_def)
+  then show ?thesis
+    by (auto intro: someI [where P = inj])
+qed
+
+definition decode :: "val \<Rightarrow> 'a::embeddable" where
+  [simp]: "decode = inv encode"
 
 subsection \<open>Environments\<close>
 
@@ -230,11 +269,11 @@ lemma composition_as_on_suffix:
 
 lemma identity_as_partial_on_suffix:
   shows "id = on_suffix 0"
-  by (rule ext, transfer) simp
+  by (rule HOL.ext, transfer) simp
 
 lemma composition_as_partial_on_suffix:
   shows "on_suffix n \<circ> on_suffix m = on_suffix (n + m)"
-  by (rule ext, transfer) (simp del: shift_append add: shift_append [symmetric])
+  by (rule HOL.ext, transfer) (simp del: shift_append add: shift_append [symmetric])
 
 lemma on_suffix_is_injective:
   assumes "injective \<E>"
@@ -693,12 +732,12 @@ lemma family_uncurry_is_bijective:
 
 lemma deep_curry_after_deep_uncurry:
   shows "\<Delta>\<^bsub>i\<^esub> \<circ> \<nabla>\<^bsub>i\<^esub> = id"
-  by (rule ext) (simp del: sdrop.simps(2) add: stake_shift sdrop_shift, simp add: stake_sdrop)
+  by (rule HOL.ext) (simp del: sdrop.simps(2) add: stake_shift sdrop_shift, simp add: stake_sdrop)
 
 lemma deep_uncurry_after_deep_curry:
   shows "\<nabla>\<^bsub>i\<^esub> \<circ> \<Delta>\<^bsub>i\<^esub> = id"
   by
-    (rule ext)
+    (rule HOL.ext)
     (simp del: sdrop.simps(2) add: stake_shift sdrop_shift id_stake_snth_sdrop [symmetric])
 
 lemma deep_curry_is_bijective:
@@ -941,18 +980,7 @@ qed
 
 lemma dependent_on_chan_at_after_source_anchored_move_adapted:
   shows "dependent_on_chan_at i (V \<guillemotleft> move i j) \<longleftrightarrow> dependent_on_chan_at j V"
-proof -
-  have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>j\<^esub> V"
-  proof -
-    have "\<Delta>\<^bsub>i\<^esub> (V \<guillemotleft> move i j) = \<Delta>\<^bsub>i\<^esub> (\<nabla>\<^bsub>i\<^esub> (\<Delta>\<^bsub>j\<^esub> V))"
-      by transfer simp
-    also have "\<dots> = \<Delta>\<^bsub>j\<^esub> V"
-      by (simp only: deep_curry_after_deep_uncurry pointfree_idE)
-    finally show ?thesis .
-  qed
-  then show ?thesis
-    by simp
-qed
+  by (simp only: source_curry_after_move_adapted dependent_on_chan_at_def)
 
 lemma dependent_on_chan_at_after_move_within_prefix_adapted:
   assumes "i < n" and "j < n"
@@ -993,7 +1021,7 @@ lemma chan_family_distinctness:
   shows "shd \<noteq> A \<guillemotleft> tail" and "A \<guillemotleft> tail \<noteq> shd"
 proof -
   obtain b where "b \<noteq> A undefined"
-    using more_than_one_chan
+    using at_least_two_channels
     by metis
   then have "shd (b ## undefined) \<noteq> (A \<guillemotleft> tail) (b ## undefined)"
     unfolding tail_def

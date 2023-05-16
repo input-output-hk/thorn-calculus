@@ -4,6 +4,7 @@ session Thorn_Calculus = HOL +
   description
     \<open>A general-purpose process calculus with support for arbitrary data.\<close>
   sessions
+    ZFC_in_HOL
     Equivalence_Reasoner
     Transition_Systems
   theories
