@@ -1005,9 +1005,9 @@ proof
     using \<open>\<not> dependent_on_chan_at i V'\<close>
     unfolding dependent_on_chan_at_def and deep_curry_def
     by metis
-  also have "\<dots> = V' \<circ> insert_at i undefined \<guillemotleft> remove i" (is "_ = ?V'")
+  also have "\<dots> = V' \<circ> insert_at i undefined \<guillemotleft> remove i" (is "_ = ?V \<guillemotleft> remove i")
     by transfer (simp only: comp_def)
-  finally show "V' = ?V'" .
+  finally show "V' = ?V \<guillemotleft> remove i" .
 qed
 
 subsection \<open>Channel Families\<close>
