@@ -56,8 +56,8 @@ primrec general_parallel :: "('a \<Rightarrow> 'p) \<Rightarrow> 'a list \<Right
   "general_parallel P (v # vs) = P v \<parallel> general_parallel P vs"
 
 text \<open>
-  We define a notation for repeated parallel composition combined with mapping. Since this notation
-  clashes with \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
+  We define a notation for general parallel composition. Since this notation clashes with
+  \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
 \<close>
 
 no_syntax
@@ -205,7 +205,7 @@ definition tagged_new_channel :: "nat \<Rightarrow> (chan \<Rightarrow> process 
   [simp]: "tagged_new_channel _ \<P> = \<nu> a. \<P> a"
 
 syntax
-  "_tagged_new_channel" :: "[nat, pttrn, process family] \<Rightarrow> process family"
+  "_tagged_new_channel" :: "nat \<Rightarrow> pttrn \<Rightarrow> process family \<Rightarrow> process family"
   (\<open>(3\<langle>_\<rangle> \<nu> _./ _)\<close> [0, 0, 52] 52)
 translations
   "\<langle>t\<rangle> \<nu> a. P" \<rightleftharpoons> "CONST tagged_new_channel t (\<lambda>a. P)"
@@ -384,8 +384,8 @@ lemma adapted_after_parallel:
   by transfer (simp add: comp_def)
 
 lemma adapted_after_new_channel:
-  fixes \<Q> :: "chan \<Rightarrow> process family"
-  shows "(\<nu> a. \<Q> a) \<guillemotleft> \<E> = \<nu> a. \<Q> a \<guillemotleft> \<E>"
+  fixes \<P> :: "chan \<Rightarrow> process family"
+  shows "(\<nu> a. \<P> a) \<guillemotleft> \<E> = \<nu> a. \<P> a \<guillemotleft> \<E>"
   by transfer (simp add: comp_def)
 
 lemma adapted_after_repeated_receive:
