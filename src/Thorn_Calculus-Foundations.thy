@@ -167,7 +167,7 @@ lemma identity_adapted:
 
 lemma composition_adapted:
   shows "V \<guillemotleft> (\<E> \<bullet> \<D>) = V \<guillemotleft> \<E> \<guillemotleft> \<D>"
-  by transfer (simp add: comp_assoc)
+  by transfer (simp only: comp_assoc)
 
 lemma adapted_undo:
   shows "V \<guillemotleft> \<E> \<circ> inv \<lfloor>\<E>\<rfloor> = V"

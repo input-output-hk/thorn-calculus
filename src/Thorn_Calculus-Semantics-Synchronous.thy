@@ -1151,7 +1151,7 @@ proof -
   have "(=) = {\<hole> \<guillemotleft> \<one>}"
     by (fastforce simp add: identity_adapted)
   also have "\<dots> \<in> \<U>"
-  by (simp only: identity_is_injective injectively_adapted_mutation_in_universe)
+    by (simp only: identity_is_injective injectively_adapted_mutation_in_universe)
   finally show ?thesis .
 qed
 
