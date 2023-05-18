@@ -63,7 +63,7 @@ syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'p \<Rightarrow> 'p"
   (\<open>(3\<Parallel>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
-  "_general_parallel v vs p" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. p) vs"
+  "\<Parallel>v \<leftarrow> vs. p" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. p) vs"
 print_translation \<open>
   [
     preserve_binder_abs_general_parallel_tr'
