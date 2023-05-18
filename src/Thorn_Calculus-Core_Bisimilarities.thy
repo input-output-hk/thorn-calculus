@@ -1631,7 +1631,7 @@ end
 lemma inner_general_parallel_redundancy:
   fixes \<Q> :: "val \<Rightarrow> process family"
   assumes "\<And>x \<Q> :: val \<Rightarrow> process family. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
-  shows "\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
+  shows "\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> \<Q> y) \<sim>\<^sub>s \<Parallel>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
 proof (induction xs arbitrary: \<Q>)
   case Nil
   have "post_receive n X (\<lambda>x. \<zero> \<parallel> \<Q> x) \<sim>\<^sub>s post_receive n X \<Q>" for n and X
@@ -1657,52 +1657,52 @@ proof (induction xs arbitrary: \<Q>)
 next
   case (Cons x xs \<Q>)
   have "
-    post_receive n X (\<lambda>y. (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
+    post_receive n X (\<lambda>y. (\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
     \<sim>\<^sub>s
-    post_receive n X (\<lambda>y. \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
+    post_receive n X (\<lambda>y. \<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
     for n and X
   proof -
     have "
-      (\<lambda>e. (((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e)
+      (\<lambda>e. (((\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> (X e)) \<guillemotleft> suffix n) e)
       =
-      (\<lambda>e. ((\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
+      (\<lambda>e. ((\<P> x \<guillemotleft> suffix n \<parallel> (\<Parallel>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> \<Q> (X e) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
-    also have "\<dots> = (\<P> x \<guillemotleft> suffix n \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+    also have "\<dots> = (\<P> x \<guillemotleft> suffix n \<parallel> (\<Parallel>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (subst environment_dependent_parallel) (fact refl)
-    also have "\<dots> \<sim>\<^sub>s ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> \<P> x \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
+    also have "\<dots> \<sim>\<^sub>s ((\<Parallel>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> \<P> x \<guillemotleft> suffix n) \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e)"
       by (intro synchronous.parallel_is_left_compatible_with_bisimilarity parallel_commutativity)
-    also have "\<dots> \<sim>\<^sub>s (\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e))"
+    also have "\<dots> \<sim>\<^sub>s (\<Parallel>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> (\<lambda>e. (\<Q> (X e) \<guillemotleft> suffix n) e))"
       using parallel_associativity .
-    also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n)) e)"
+    also have "\<dots> = (\<lambda>e. ((\<Parallel>x \<leftarrow> xs. \<P> x) \<guillemotleft> suffix n \<parallel> (\<P> x \<guillemotleft> suffix n \<parallel> \<Q> (X e) \<guillemotleft> suffix n)) e)"
       by
         (subst (3) environment_dependent_parallel, subst (4) environment_dependent_parallel)
         (fact refl)
-    also have "\<dots> = (\<lambda>e. ((\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> (X e))) \<guillemotleft> suffix n) e)"
+    also have "\<dots> = (\<lambda>e. ((\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> (X e))) \<guillemotleft> suffix n) e)"
       by (simp only: adapted_after_parallel)
     finally show ?thesis
       unfolding post_receive_def .
   qed
   then have "
-    (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. ((\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
+    (\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. ((\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> \<Q> y)
     \<sim>\<^sub>s
-    (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
+    (\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y))"
     by
       (intro
         synchronous.parallel_is_right_compatible_with_bisimilarity
         synchronous.repeated_receive_is_quasi_compatible_with_bisimilarity
       )
       simp
-  also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
+  also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> \<Q> y)))"
     using parallel_associativity .
-  also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Prod>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
+  also have "\<dots> \<sim>\<^sub>s \<P> x \<parallel> (\<Parallel>x \<leftarrow> xs. \<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using Cons.IH
     by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
-  also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
+  also have "\<dots> \<sim>\<^sub>s \<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. (\<P> x \<parallel> \<Q> y))"
     using parallel_left_commutativity .
-  also have "\<dots> \<sim>\<^sub>s \<Prod>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
+  also have "\<dots> \<sim>\<^sub>s \<Parallel>x \<leftarrow> xs. \<P> x \<parallel> (\<P> x \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y)"
     using assms
     by (rule synchronous.parallel_is_right_compatible_with_bisimilarity)
-  also have "\<dots> \<sim>\<^sub>s (\<P> x \<parallel> \<Prod>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
+  also have "\<dots> \<sim>\<^sub>s (\<P> x \<parallel> \<Parallel>x \<leftarrow> xs. \<P> x) \<parallel> A \<triangleright>\<^sup>\<infinity> y. \<Q> y"
     using thorn_simps
     by equivalence
   finally show ?case
