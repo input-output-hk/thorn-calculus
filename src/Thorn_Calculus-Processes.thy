@@ -330,7 +330,7 @@ lemma family_uncurry_after_parallel:
 
 lemma family_uncurry_after_new_channel:
   fixes \<P> :: "chan \<Rightarrow> chan \<Rightarrow> process family"
-  shows "\<nabla> (\<lambda>a. \<nu> b. \<P> a b) = \<nu> b. \<nabla> (\<lambda>a. \<P> a b)"
+  shows "\<nabla> (\<lambda>b. \<nu> a. \<P> a b) = \<nu> a. \<nabla> (\<P> a)"
   by simp
 
 lemma family_uncurry_after_repeated_receive:
@@ -357,7 +357,7 @@ lemma deep_uncurry_after_parallel:
 
 lemma deep_uncurry_after_new_channel:
   fixes \<P> :: "chan \<Rightarrow> chan \<Rightarrow> process family"
-  shows "\<nabla>\<^bsub>i\<^esub> (\<lambda>a. \<nu> b. \<P> a b) = \<nu> b. \<nabla>\<^bsub>i\<^esub> (\<lambda>a. \<P> a b)"
+  shows "\<nabla>\<^bsub>i\<^esub> (\<lambda>b. \<nu> a. \<P> a b) = \<nu> a. \<nabla>\<^bsub>i\<^esub> (\<P> a)"
   by simp
 
 lemma deep_uncurry_after_create_channel:

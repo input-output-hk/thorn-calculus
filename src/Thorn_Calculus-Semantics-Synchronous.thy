@@ -50,7 +50,7 @@ lemma post_receive_after_send:
 
 lemma post_receive_after_receive:
   fixes \<A> :: "val \<Rightarrow> chan family" and \<P> :: "val \<Rightarrow> val \<Rightarrow> process family"
-  shows "post_receive n X (\<lambda>x. \<A> x \<triangleright> y. \<P> x y) = post_receive n X \<A> \<triangleright> y. post_receive n X (\<lambda>x. \<P> x y)"
+  shows "post_receive n Y (\<lambda>y. \<A> y \<triangleright> x. \<P> x y) = post_receive n Y \<A> \<triangleright> x. post_receive n Y (\<P> x)"
   unfolding post_receive_def and adapted_after_receive
   by (simp only: receive_family_def)
 
@@ -68,8 +68,8 @@ lemma post_receive_after_general_parallel:
     (simp_all only: general_parallel.simps post_receive_after_stop post_receive_after_parallel)
 
 lemma post_receive_after_new_channel:
-  fixes \<P> :: "val \<Rightarrow> chan \<Rightarrow> process family"
-  shows "post_receive n X (\<lambda>x. \<nu> a. \<P> x a) = \<nu> a. post_receive n X (\<lambda>x. \<P> x a)"
+  fixes \<P> :: "chan \<Rightarrow> val \<Rightarrow> process family"
+  shows "post_receive n X (\<lambda>x. \<nu> a. \<P> a x) = \<nu> a. post_receive n X (\<P> a)"
   unfolding post_receive_def and adapted_after_new_channel
   by (simp only: new_channel_family_def)
 
