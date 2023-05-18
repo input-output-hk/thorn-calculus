@@ -62,7 +62,7 @@ lemma post_receive_after_parallel:
 
 lemma post_receive_after_general_parallel:
   fixes \<P> :: "'a \<Rightarrow> val \<Rightarrow> process family"
-  shows "post_receive n X (\<lambda>x. \<Prod>v \<leftarrow> vs. \<P> v x) = \<Prod>v \<leftarrow> vs. post_receive n X (\<P> v)"
+  shows "post_receive n X (\<lambda>x. \<Parallel>v \<leftarrow> vs. \<P> v x) = \<Parallel>v \<leftarrow> vs. post_receive n X (\<P> v)"
   by
     (induction vs)
     (simp_all only: general_parallel.simps post_receive_after_stop post_receive_after_parallel)
@@ -1915,7 +1915,7 @@ lemma repeated_receive_is_quasi_compatible_with_bisimilarity:
 
 lemma general_parallel_is_compatible_with_bisimilarity:
   assumes "\<And>v. \<P>\<^sub>1 v \<sim> \<P>\<^sub>2 v"
-  shows "\<Prod>v \<leftarrow> vs. \<P>\<^sub>1 v \<sim> \<Prod>v \<leftarrow> vs. \<P>\<^sub>2 v"
+  shows "\<Parallel>v \<leftarrow> vs. \<P>\<^sub>1 v \<sim> \<Parallel>v \<leftarrow> vs. \<P>\<^sub>2 v"
   using parallel_is_compatible_with_bisimilarity and assms
   by (induction vs) simp_all
 
@@ -1959,7 +1959,7 @@ lemma parallel_compatibility_rule [compatibility]:
   sorry
 
 lemma general_parallel_compatibility_rule [compatibility]:
-  shows "\<Prod>v \<leftarrow> vs. \<P> v \<sim> \<Prod>v \<leftarrow> vs. canonical (\<sim>) (\<P> v)"
+  shows "\<Parallel>v \<leftarrow> vs. \<P> v \<sim> \<Parallel>v \<leftarrow> vs. canonical (\<sim>) (\<P> v)"
   using general_parallel_is_compatible_with_bisimilarity
   sorry
 

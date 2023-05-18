@@ -56,16 +56,12 @@ primrec general_parallel :: "('a \<Rightarrow> 'p) \<Rightarrow> 'a list \<Right
   "general_parallel P (v # vs) = P v \<parallel> general_parallel P vs"
 
 text \<open>
-  We define a notation for general parallel composition. Since this notation clashes with
-  \<open>HOL.Groups_List._prod_list\<close>, we have to remove the latter.
+  We define a notation for general parallel composition.
 \<close>
-
-no_syntax
-  "_prod_list" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'b \<Rightarrow> 'b" (\<open>(3\<Prod>_\<leftarrow>_. _)\<close> [0, 51, 10] 10)
 
 syntax
   "_general_parallel" :: "pttrn \<Rightarrow> 'a list \<Rightarrow> 'p \<Rightarrow> 'p"
-  (\<open>(3\<Prod>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
+  (\<open>(3\<Parallel>_ \<leftarrow> _. _)\<close> [0, 0, 52] 52)
 translations
   "_general_parallel v vs p" \<rightleftharpoons> "CONST general_parallel (\<lambda>v. p) vs"
 print_translation \<open>
@@ -77,7 +73,7 @@ print_translation \<open>
 \<close>
 
 lemma general_parallel_conversion_deferral:
-  shows "\<Prod>w \<leftarrow> map f vs. P w = \<Prod>v \<leftarrow> vs. P (f v)"
+  shows "\<Parallel>w \<leftarrow> map f vs. P w = \<Parallel>v \<leftarrow> vs. P (f v)"
   by (induction vs) (simp_all only: general_parallel.simps list.map)
 
 (* FIXME: Mention that \<open>\<circ>\<close> binds stronger than all the above operators and binders. *)
@@ -340,7 +336,7 @@ lemma family_uncurry_after_repeated_receive:
 
 lemma family_uncurry_after_general_parallel:
   fixes \<P> :: "'a \<Rightarrow> chan \<Rightarrow> process family"
-  shows "\<nabla> (\<lambda>a. \<Prod>v \<leftarrow> vs. \<P> v a) = \<Prod>v \<leftarrow> vs. \<nabla> (\<P> v)"
+  shows "\<nabla> (\<lambda>a. \<Parallel>v \<leftarrow> vs. \<P> v a) = \<Parallel>v \<leftarrow> vs. \<nabla> (\<P> v)"
   by
     (induction vs)
     (simp_all only: general_parallel.simps family_uncurry_after_stop family_uncurry_after_parallel)
@@ -400,7 +396,7 @@ lemma adapted_after_guard:
 
 lemma adapted_after_general_parallel:
   fixes \<P> :: "'a \<Rightarrow> process family"
-  shows "(\<Prod>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Prod>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
+  shows "(\<Parallel>v \<leftarrow> vs. \<P> v) \<guillemotleft> \<E> = \<Parallel>v \<leftarrow> vs. \<P> v \<guillemotleft> \<E>"
   by
     (induction vs)
     (simp_all only: general_parallel.simps adapted_after_stop adapted_after_parallel)
@@ -567,7 +563,7 @@ lemma environment_dependent_parallel:
 
 lemma environment_dependent_general_parallel:
   fixes \<P> :: "'a \<Rightarrow> chan stream \<Rightarrow> process family"
-  shows "(\<lambda>e. (\<Prod>v \<leftarrow> vs. \<P> v e) e) = \<Prod>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
+  shows "(\<lambda>e. (\<Parallel>v \<leftarrow> vs. \<P> v e) e) = \<Parallel>v \<leftarrow> vs. (\<lambda>e. \<P> v e e)"
 proof (induction vs)
   case Nil
   show ?case
