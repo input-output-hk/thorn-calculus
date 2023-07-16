@@ -269,11 +269,11 @@ lemma composition_as_on_suffix:
 
 lemma identity_as_partial_on_suffix:
   shows "id = on_suffix 0"
-  by (rule HOL.ext, transfer) simp
+  by (standard, transfer) simp
 
 lemma composition_as_partial_on_suffix:
   shows "on_suffix n \<circ> on_suffix m = on_suffix (n + m)"
-  by (rule HOL.ext, transfer) (simp del: shift_append add: shift_append [symmetric])
+  by (standard, transfer) (simp del: shift_append add: shift_append [symmetric])
 
 lemma on_suffix_is_injective:
   assumes "injective \<E>"
@@ -732,12 +732,12 @@ lemma family_uncurry_is_bijective:
 
 lemma deep_curry_after_deep_uncurry:
   shows "\<Delta>\<^bsub>i\<^esub> \<circ> \<nabla>\<^bsub>i\<^esub> = id"
-  by (rule HOL.ext) (simp del: sdrop.simps(2) add: stake_shift sdrop_shift, simp add: stake_sdrop)
+  by standard (simp del: sdrop.simps(2) add: stake_shift sdrop_shift, simp add: stake_sdrop)
 
 lemma deep_uncurry_after_deep_curry:
   shows "\<nabla>\<^bsub>i\<^esub> \<circ> \<Delta>\<^bsub>i\<^esub> = id"
   by
-    (rule HOL.ext)
+    standard
     (simp del: sdrop.simps(2) add: stake_shift sdrop_shift id_stake_snth_sdrop [symmetric])
 
 lemma deep_curry_is_bijective:
