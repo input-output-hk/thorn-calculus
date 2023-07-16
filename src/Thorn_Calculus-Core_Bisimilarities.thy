@@ -1,5 +1,6 @@
 theory "Thorn_Calculus-Core_Bisimilarities"
-  imports "Thorn_Calculus-Semantics-Synchronous"
+  imports
+    "Thorn_Calculus-Semantics-Synchronous"
 begin
 
 named_theorems thorn_simps

@@ -1,8 +1,8 @@
 section \<open>Asynchronous Semantics\<close>
 
 theory "Thorn_Calculus-Semantics-Asynchronous"
-imports
-  "Thorn_Calculus-Semantics-Synchronous"
+  imports
+    "Thorn_Calculus-Semantics-Synchronous"
 begin
 
 fun asynchronous_transition :: "action \<Rightarrow> process family relation" (\<open>'(\<rightarrow>\<^sub>a\<lparr>_\<rparr>')\<close>) where

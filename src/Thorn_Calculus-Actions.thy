@@ -1,8 +1,8 @@
 section \<open>Actions\<close>
 
 theory "Thorn_Calculus-Actions"
-imports
-  "Thorn_Calculus-Foundations"
+  imports
+    "Thorn_Calculus-Foundations"
 begin
 
 datatype io_kind =
