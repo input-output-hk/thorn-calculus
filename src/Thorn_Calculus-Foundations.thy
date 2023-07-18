@@ -1,10 +1,10 @@
 section \<open>Foundations\<close>
 
 theory "Thorn_Calculus-Foundations"
-imports
-  Main
-  "ZFC_in_HOL.ZFC_Typeclasses"
-  "HOL-Library.Stream"
+  imports
+    Main
+    "ZFC_in_HOL.ZFC_Typeclasses"
+    "HOL-Library.Stream"
 begin
 
 text \<open>

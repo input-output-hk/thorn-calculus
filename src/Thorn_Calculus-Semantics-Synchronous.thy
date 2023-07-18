@@ -1,10 +1,10 @@
 section \<open>Synchronous Semantics\<close>
 
 theory "Thorn_Calculus-Semantics-Synchronous"
-imports
-  "Transition_Systems.Transition_Systems-Weak_Mutation_Systems"
-  "Thorn_Calculus-Actions"
-  "Thorn_Calculus-Processes"
+  imports
+    "Transition_Systems.Transition_Systems-Weak_Mutation_Systems"
+    "Thorn_Calculus-Actions"
+    "Thorn_Calculus-Processes"
 begin
 
 definition post_receive :: "nat \<Rightarrow> val family \<Rightarrow> (val \<Rightarrow> 'a family) \<Rightarrow> 'a family" where

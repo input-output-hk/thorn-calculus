@@ -3,8 +3,8 @@
   and then this theory should be removed.
 *)
 theory "Thorn_Calculus-Examples"
-imports
-  "Thorn_Calculus-Semantics-Synchronous"
+  imports
+    "Thorn_Calculus-Semantics-Synchronous"
 begin
 
 lemma

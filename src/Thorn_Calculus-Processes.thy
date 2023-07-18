@@ -1,11 +1,11 @@
 section \<open>Processes\<close>
 
 theory "Thorn_Calculus-Processes"
-imports
-  "Equivalence_Reasoner.Equivalence_Reasoner"
-  "Transition_Systems.Transition_Systems-Foundations" \<comment> \<open>for the \<^const>\<open>compower\<close> notation\<close>
-  "Thorn_Calculus-Foundations"
-  "HOL-Library.BNF_Corec"
+  imports
+    "Equivalence_Reasoner.Equivalence_Reasoner"
+    "Transition_Systems.Transition_Systems-Foundations" \<comment> \<open>for the \<^const>\<open>compower\<close> notation\<close>
+    "Thorn_Calculus-Foundations"
+    "HOL-Library.BNF_Corec"
 begin
 
 ML_file \<open>binder_preservation.ML\<close>
