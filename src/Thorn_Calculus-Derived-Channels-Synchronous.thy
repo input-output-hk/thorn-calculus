@@ -11,7 +11,10 @@ theory "Thorn_Calculus-Derived-Channels-Synchronous"
 begin
 
 typedef 'a sync_channel = "UNIV :: 'a channel channel set"
-  using UNIV_witness .
+  morphisms sync_channel_to_nested_channel sync_channel_from_nested_channel ..
+
+instance sync_channel :: (type) embeddable
+  by standard (meson sync_channel_to_nested_channel_inject ex_inj inj_def)
 
 lift_definition
   sync_send :: "'a sync_channel \<Rightarrow> 'a \<Rightarrow> process \<Rightarrow> process"
