@@ -13,6 +13,9 @@ begin
 typedef 'a sync_channel = "UNIV :: 'a channel channel set"
   morphisms sync_channel_to_nested_channel sync_channel_from_nested_channel ..
 
+instance sync_channel :: (type) embeddable
+  by standard (meson sync_channel_to_nested_channel_inject ex_inj inj_def)
+
 lift_definition
   sync_send :: "'a sync_channel \<Rightarrow> 'a \<Rightarrow> process \<Rightarrow> process"
   (\<open>_ \<triangleleft>\<^bsub>s\<^esub> _;/ _\<close> [53, 0, 52] 52)
