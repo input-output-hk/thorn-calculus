@@ -62,10 +62,10 @@ instance channel :: (type) embeddable
 
 subsection \<open>Values\<close>
 
-typedef val = "UNIV :: V set" morphisms to_zfc_set from_zfc_set ..
+typedef val = "UNIV :: V set" morphisms val_to_zfc_set val_from_zfc_set ..
 
 instance val :: embeddable
-  by standard (meson to_zfc_set_inject inj_def)
+  by standard (meson val_to_zfc_set_inject inj_def)
 
 definition encode :: "'a::embeddable \<Rightarrow> val" where
   [simp]: "encode = (SOME f. inj f)"
@@ -74,7 +74,7 @@ lemma encode_injectivity:
   shows "inj encode"
 proof -
   have "\<exists>f :: 'a::embeddable \<Rightarrow> val. inj f"
-    by (meson ex_inj from_zfc_set_inject [OF UNIV_I UNIV_I] inj_def)
+    by (meson ex_inj val_from_zfc_set_inject [OF UNIV_I UNIV_I] inj_def)
   then show ?thesis
     by (auto intro: someI [where P = inj])
 qed
