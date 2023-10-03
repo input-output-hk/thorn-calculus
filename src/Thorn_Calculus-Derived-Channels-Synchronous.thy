@@ -33,4 +33,15 @@ print_translation \<open>
   [preserve_binder_abs_receive_tr' @{const_syntax sync_receive} @{syntax_const "_sync_receive"}]
 \<close>
 
+typedef sync_chan = "UNIV :: chan set" morphisms sync_chan_to_chan sync_chan_from_chan ..
+
+instance sync_chan :: embeddable
+  by standard (meson sync_chan_to_chan_inject ex_inj inj_def)
+
+definition sync_untyped :: "'a sync_channel \<Rightarrow> sync_chan" where
+  [simp]: "sync_untyped = sync_chan_from_chan \<circ> untyped \<circ> sync_channel_to_nested_channel"
+
+definition sync_typed :: "sync_chan \<Rightarrow> 'a sync_channel" where
+  [simp]: "sync_typed = sync_channel_from_nested_channel \<circ> typed \<circ> sync_chan_to_chan"
+
 end
