@@ -18,7 +18,7 @@ instance sync_channel :: (type) embeddable
 
 lift_definition
   sync_send :: "'a sync_channel \<Rightarrow> 'a \<Rightarrow> process \<Rightarrow> process"
-  (\<open>_ \<triangleleft>\<^bsub>s\<^esub> _;/ _\<close> [53, 0, 52] 52)
+  (\<open>(_ \<triangleleft>\<^bsub>s\<^esub> _;/ _)\<close> [53, 0, 52] 52)
   is "\<lambda>A x p. A \<triangleright> (a :: 'a channel). (a \<triangleleft> x \<parallel> p)" .
 
 lift_definition sync_receive :: "'a sync_channel \<Rightarrow> ('a \<Rightarrow> process) \<Rightarrow> process"
