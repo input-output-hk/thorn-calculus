@@ -17,15 +17,15 @@ instance sync_channel :: (type) embeddable
   by standard (meson sync_channel_to_nested_channel_inject ex_inj inj_def)
 
 lift_definition
-  sync_send :: "'a sync_channel \<Rightarrow> 'a \<Rightarrow> process \<Rightarrow> process"
+  sync_send :: "'a sync_channel \<Rightarrow> 'a::embeddable \<Rightarrow> process \<Rightarrow> process"
   (\<open>(_ \<triangleleft>\<^bsub>s\<^esub> _;/ _)\<close> [53, 0, 52] 52)
   is "\<lambda>A x p. A \<triangleright> (a :: 'a channel). (a \<triangleleft> x \<parallel> p)" .
 
-lift_definition sync_receive :: "'a sync_channel \<Rightarrow> ('a \<Rightarrow> process) \<Rightarrow> process"
+lift_definition sync_receive :: "'a sync_channel \<Rightarrow> ('a::embeddable \<Rightarrow> process) \<Rightarrow> process"
   is "\<lambda>A P. \<nu> (a :: 'a channel). (A \<triangleleft> a \<parallel> a \<triangleright> x. P x)" .
 
 syntax
-  "_sync_receive" :: "'a sync_channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
+  "_sync_receive" :: "'a::embeddable sync_channel \<Rightarrow> pttrn \<Rightarrow> process \<Rightarrow> process"
   (\<open>(3_ \<triangleright>\<^bsub>s\<^esub> _./ _)\<close> [53, 0, 52] 52)
 translations
   "a \<triangleright>\<^bsub>s\<^esub> x. p" \<rightleftharpoons> "CONST sync_receive a (\<lambda>x. p)"
