@@ -15,5 +15,6 @@ session Thorn_Calculus = HOL +
     "Thorn_Calculus-Semantics-Asynchronous"
     "Thorn_Calculus-Core_Bisimilarities"
     "Thorn_Calculus-Derived-Channels-Synchronous"
+    "Thorn_Calculus-FIFO_Transmission"
   document_files
     "root.tex"
