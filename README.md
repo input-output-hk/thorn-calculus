@@ -14,6 +14,12 @@ Isabelle2022 from the [Isabelle website][isabelle].
     https://isabelle.in.tum.de/
     "Isabelle"
 
+In addition, you need the following Isabelle sessions:
+
+  * [`ZFC_in_HOL`](https://www.isa-afp.org/entries/ZFC_in_HOL.html)
+  * [`Equivalence_Reasoner`](https://github.com/input-output-hk/equivalence-reasoner)
+  * [`Transition_Systems`](https://github.com/input-output-hk/transition-systems)
+
 
 Setup
 =====
