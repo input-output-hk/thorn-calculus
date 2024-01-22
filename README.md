@@ -1,7 +1,21 @@
 Overview
 ========
 
-[…]
+The `thorn-calculus` library contains the Þ-calculus, which is a
+general-purpose process calculus. The Þ-calculus is embedded in
+Isabelle/HOL, using higher-order abstract syntax (HOAS). The use of HOAS
+allows us to have the object language (the Þ-calculus) only deal with
+the key features of process calculi, which are concurrency and
+communication, and leave the treatment of local names, data,
+computation, conditional execution, and repetition to the meta-language
+(Isabelle/HOL).
+
+The Þ-calculus strongly resembles the asynchronous π-calculus. Processes
+communicate via asynchronous channels, which can be global or created
+locally. Channels are first-class and can therefore be transmitted
+through other channels, thus making them visible outside their original
+scopes. This is the mobility feature pioneered by the (synchronous)
+π-calculus.
 
 
 Requirements
